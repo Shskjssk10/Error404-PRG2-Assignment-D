@@ -57,7 +57,7 @@ namespace Error404_PRG2_V2
             {
                 toppingList = "None";
             }
-            return $"Type: {Option} \nScoops: {Scoops}\nFlavours: \n{flavourList}Toppings:\n{toppingList}";
+            return $"\nType: {Option} \nScoops: {Scoops}\nFlavours: \n{flavourList}Toppings:\n{toppingList}";
         }
     }
 }

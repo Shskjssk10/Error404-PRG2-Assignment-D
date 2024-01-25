@@ -72,7 +72,8 @@ namespace Error404_PRG2_V2
 
         public override string ToString()
         {
-            return $"{id,-8}{timeReceived}";
+            return $"Order ID: {Id}\nTime Received: {TimeReceived}\nTime Fulfilled:" +
+                $"{TimeFulfilled}";
         }
     }
 }
