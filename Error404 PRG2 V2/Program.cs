@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace Error404_PRG2_V2
 {
@@ -283,35 +284,82 @@ namespace Error404_PRG2_V2
         {
             Console.Write("Enter customer name: ");
             var name = Console.ReadLine().Trim();
-            int id;
+
+            int id = 0;
 
             // ID data validation. Checks that it must be a 5-digit integer.
-            try
+            while (true)
             {
-                Console.Write("Enter customer ID: ");
-                id = Convert.ToInt32(Console.ReadLine().Trim());
+                try
+                {
+                    Console.Write("Enter customer ID: ");
+                    id = Convert.ToInt32(Console.ReadLine().Trim());
+                    if (Convert.ToString(id).Length != 6)
+                    {
+                        Console.WriteLine("Input is not 6 digits longs. Please ensure 6 integers are entered.\n");
+                    }
+                    else if (customerDict.Keys.Contains(id) == true)
+                    {
+                        Console.WriteLine("Current ID entered clashes with another customer. Please enter another set of 6 digits.\n");
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                catch (FormatException e)
+                {
+                    Console.WriteLine(e.Message);
+                    Console.WriteLine("Please enter a 6-digit integer\n");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                    Console.WriteLine("How did you do this?\n");
+                }
             }
-            catch (FormatException e)
+
+            // DOB data validation. Checks that it is entered in the correct format.
+            DateTime dob = DateTime.Today;
+            string format = "dd/MM/yyyy";
+
+            while (true)
             {
-                Console.WriteLine(e.Message);
-                Console.WriteLine("Please enter a 5-digit integer");
+                try
+                {
+                    Console.Write("Enter customer DOB [DD/MM/YYYY]: ");
+                    dob = DateTime.ParseExact(Console.ReadLine(), format, null);
+                    break;
+                }
+                catch (FormatException e)
+                {
+                    Console.WriteLine(e.Message);
+                    Console.WriteLine("Please ensure that your birthday is entered in the following format: [DD/MM/YYYY]\n");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                    Console.WriteLine("How did you do this?\n");
+                }
+
             }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.Message);
-                Console.WriteLine("How did you do this?");
-            }
-            Console.Write("Enter customer DOB: ");
-            var dob = Convert.ToDateTime(Console.ReadLine().Trim());
+
             Customer customer = new Customer(name, id, dob);
             //customer.Rewards.Tier = "Ordinary"; 
             customerDict.Add(id, customer);
 
-
-            using (StreamWriter sw = new StreamWriter("customers.csv"))
+            string customerFilePath = "C:\\Users\\Caden\\Documents\\Desktop Personal\\Programming - Related\\C#\\PRG Assignment Version folders\\Error404 PRG2 V3\\Error404 PRG2 V2\\customers.csv";
+            try
             {
-                sw.Write($"{customer.Name},{customer.MemberID},{customer.Dob.ToShortDateString()},{customer.Rewards.Tier},{customer.Rewards.Points},{customer.Rewards.PunchCard}\n");
-                Console.WriteLine("Customer successfully appended to customers.csv");
+                using (StreamWriter sw = new StreamWriter(customerFilePath))
+                {
+                    sw.Write($"{customer.Name},{customer.MemberID},{customer.Dob.ToShortDateString()},{customer.Rewards.Tier},{customer.Rewards.Points},{customer.Rewards.PunchCard}\n");
+                    Console.WriteLine("Customer successfully appended to customers.csv");
+                }
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine(e.Message); 
             }
         }
 
