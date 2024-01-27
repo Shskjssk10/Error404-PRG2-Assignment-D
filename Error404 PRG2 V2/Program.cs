@@ -61,6 +61,18 @@ namespace Error404_PRG2_V2
                     Option6(customerDict);
                     Console.WriteLine();
                 }
+                else if (option == "7")
+                {
+                    Console.WriteLine();
+                    Option6(customerDict);
+                    Console.WriteLine();
+                }
+                else if (option == "8")
+                {
+                    Console.WriteLine();
+                    Option6(customerDict);
+                    Console.WriteLine();
+                }
                 else if (option == "0")
                 {
                     Console.WriteLine();
@@ -93,8 +105,8 @@ namespace Error404_PRG2_V2
         static void MenuInterface()
         {
             Console.Write("================= MENU INTERFACE =================\n[1] List all customers\n[2] List all current orders\n[3] Register" +
-                " a new customer\n[4] Create a customer's order\n[5] Display order details of a customer\n[6] Modify order details\n" +
-                "[0] Exit\n==================================================\nEnter option: ");
+                " a new customer\n[4] Create a customer's order\n[5] Display order details of a customer\n[6] Modify order details\n[7] Process an Order and Checkout" +
+                "\n[8] Display Financial Details\n[0] Exit\n==================================================\nEnter option: ");
         }
 
         static Dictionary<int, Customer> InitData()
@@ -282,64 +294,47 @@ namespace Error404_PRG2_V2
             }
         }
 
-        // Option2 Incomplete, requires option 4 to be complete.
+        // Option2 Logic is complete, requires option 4 to be complete.
         static void Option2(Dictionary<int, Customer> customerDict)
         {
             // Display information of all CURRENT orders in both gold and regular queues
-            Queue<string> goldQueue = new Queue<string>();
-            Queue<string> regularQueue = new Queue<string>();
+            Queue<Customer> goldQueue = new Queue<Customer>();
+            Queue<Customer> regularQueue = new Queue<Customer>();
 
+            List<Customer> filteredCustomerList = new List<Customer>();
+            
+            // Filter customers with current orders 
+            foreach (Customer customer in customerDict.Values)
+            {
+                if (customer.CurrentOrder != null)
+                {
+                    filteredCustomerList.Add(customer);
+                }
+            }
 
+            foreach (Customer customer in filteredCustomerList)
+            {
+                if (customer.Rewards.Tier == "Gold")
+                {
+                    goldQueue.Enqueue(customer);
+                }
+                else
+                {
+                    regularQueue.Enqueue(customer);
+                }
+            }
 
-            //using (StreamReader sr = new StreamReader("orders.csv"))
-            //{
-            //    string header = sr.ReadLine();
-            //    string line;
-            //    while ((line = sr.ReadLine()) != null)
-            //    {
-            //        string[] parts = line.Split(',');
-            //        if (int.TryParse(parts[1], out int memberId))
-            //        {
-            //            if (customerDict.ContainsKey(memberId))
-            //            {
-            //                Customer customer = customerDict[memberId];
-            //                if (customer.Rewards.Tier == "Gold")
-            //                {
-            //                    goldQueue.Enqueue(line);
-            //                }
-            //                else
-            //                {
-            //                    regularQueue.Enqueue(line);
-            //                }
-            //            }
-            //        }
-            //    }
-            //}
+            Console.WriteLine("================= GOLD QUEUE =================");
+            foreach (Customer customer in goldQueue)
+            {
+                Console.WriteLine(customer.CurrentOrder.ToString());
+            }
 
-            //Console.WriteLine("Gold Member's Queue");
-            //Console.WriteLine("{0,-3}{1,-10}{2,-18}{3,-18}{4,-8}{5,-8}{6,-8}{7,-15}{8,-12}{9,-12}{10,-12}{11,-12}{12,-12}{13,-12}{14}"
-            //        , "Id", "MemberId", "Time received", "Time fulfilled", "Option", "Scoops", "Dipped",
-            //        "WaffleFlavour", "Flavour1", "Flavour2", "Flavour3", "Topping1", "Topping2", "Topping3", "Topping4");
-            //foreach (var order in goldQueue)
-            //{
-            //    string[] contents = order.Split(',');
-            //    Console.WriteLine("{0,-3}{1,-10}{2,-18}{3,-18}{4,-8}{5,-8}{6,-8}{7,-15}{8,-12}{9,-12}{10,-12}{11,-12}{12,-12}{13,-12}{14}",
-            //        contents[0], contents[1], contents[2], contents[3], contents[4], contents[5], contents[6], contents[7], contents[8], contents[9],
-            //        contents[10], contents[11], contents[12], contents[13], contents[14]);
-            //}
-
-            //Console.WriteLine();
-            //Console.WriteLine("Regular Member's Queue");
-            //Console.WriteLine("{0,-3}{1,-10}{2,-18}{3,-18}{4,-8}{5,-8}{6,-8}{7,-15}{8,-12}{9,-12}{10,-12}{11,-12}{12,-12}{13,-12}{14}"
-            //    , "Id", "MemberId", "Time received", "Time fulfilled", "Option", "Scoops", "Dipped",
-            //    "WaffleFlavour", "Flavour1", "Flavour2", "Flavour3", "Topping1", "Topping2", "Topping3", "Topping4");
-            //foreach (var order in regularQueue)
-            //{
-            //    string[] contents = order.Split(',');
-            //    Console.WriteLine("{0,-3}{1,-10}{2,-18}{3,-18}{4,-8}{5,-8}{6,-8}{7,-15}{8,-12}{9,-12}{10,-12}{11,-12}{12,-12}{13,-12}{14}",
-            //        contents[0], contents[1], contents[2], contents[3], contents[4], contents[5], contents[6], contents[7], contents[8], contents[9],
-            //        contents[10], contents[11], contents[12], contents[13], contents[14]);
-            //}
+            Console.WriteLine("=============== REGULAR QUEUE ===============");
+            foreach (Customer customer in regularQueue)
+            {
+                Console.WriteLine(customer.CurrentOrder.ToString());
+            }
         }
 
         // Option3 Customer is not appended to customer.csv 
@@ -428,14 +423,35 @@ namespace Error404_PRG2_V2
             }
         }
         
-        // Option4 Incomplete. Order not appended to orders.csv
+        // Option4 Logic completed. Need hendrik to test
         static void Option4(Dictionary<int, Customer> customerDict)
         {
             Customer selectedCustomer = selectCustomer(customerDict);
 
-            Order order = new Order(selectedCustomer.MemberID, DateTime.Now);
+            selectedCustomer.CurrentOrder = new Order(selectedCustomer.MemberID, DateTime.Now);
 
-            IceCream iceCream = makeIceCream();
+            string option;
+            while (true)
+            {
+                Console.Write("Would you like to add another ice cream [y/n]: ");
+                option = Console.ReadLine();
+                if (option == "y")
+                {
+                    IceCream iceCream = makeIceCream();
+                    selectedCustomer.CurrentOrder.AddIceCream(iceCream);
+                    Console.WriteLine($"Ice Cream has been succesfully added to {selectedCustomer.Name} current order!");
+                }
+                else if (option == "n")
+                {
+                    Console.WriteLine("Order has been succesfully created!");
+                    break;
+                }
+                else
+                {
+                    Console.WriteLine("Invalid input. Please enter 'y' or 'n'.");
+                }
+            }
+
         }
 
         // Completed 
@@ -589,6 +605,18 @@ namespace Error404_PRG2_V2
                 }
             }
             
+        }
+
+        //Incomplete
+        static void Option7(Dictionary<int, Customer> customerDict)
+        {
+
+        }
+
+        // Incomplete
+        static void Option8(Dictionary<int, Customer> customerDict)
+        {
+
         }
         
         // Method that validates and returns customer
