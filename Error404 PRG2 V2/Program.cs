@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -447,7 +448,7 @@ namespace Error404_PRG2_V2
                 Console.WriteLine($"[{i++}] {option}");
             }
             //Choose Cup, Cone or Waffle.
-            int selectedOption = integerValidator(3);
+            int selectedOption = integerValidator("option", 3);
 
             //Scoops, flavour and topping
 
@@ -456,32 +457,7 @@ namespace Error404_PRG2_V2
             List<Topping> userToppingList = new List<Topping>();
 
             //Choose no. of scoops 
-            var scoops = 0;
-            while (true)
-            {
-                try
-                {
-                    Console.Write("Enter number of scoops (1-3): ");
-                    scoops = Convert.ToInt32(Console.ReadLine());
-                    if (scoops > 0 && scoops < 4)
-                    {
-                        break;
-                    }
-                    else
-                    {
-                        Console.WriteLine("Please enter an integer between 1-3.");
-                    }
-                }
-                catch (FormatException e)
-                {
-                    Console.WriteLine(e.Message);
-                    Console.WriteLine("Please enter an integer between 1-3.");
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e.Message);
-                }
-            }
+            var scoops = integerValidator("No. of scoops from 1-3", 3);
 
             //List containing flavours chosen by user 
             int counter;
@@ -496,33 +472,7 @@ namespace Error404_PRG2_V2
                     Console.WriteLine($"[{counter++}] {flavour}");
                 }
                 //Choose flavour 
-                var userFlavour = 0;
-                while (true)
-                {
-                    try
-                    {
-                        Console.Write("Select Flavour: ");
-                        userFlavour = Convert.ToInt32(Console.ReadLine().Trim());
-                        if (userFlavour > 0 && userFlavour < 7)
-                        {
-                            break;
-                        }
-                        else
-                        {
-                            Console.WriteLine("Please enter an integer between 1-6.");
-                        }
-                    }
-                    catch (FormatException e)
-                    {
-                        Console.WriteLine(e.Message);
-                        Console.WriteLine("Please enter an integer between 1-6.");
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e.Message);
-                        Console.WriteLine("Please enter an integer between 1-6.");
-                    }
-                }
+                int userFlavour = integerValidator("flavour number from 1-6", 6);
 
                 //Number of selected flavour 
                 var userFlavourNo = 0;
@@ -530,27 +480,8 @@ namespace Error404_PRG2_V2
                 //Check that inputted flavours do not exceed number of scoops 
                 while (true)
                 {
-
                     //Validate input type
-                    while (true)
-                    {
-                        try
-                        {
-                            Console.Write($"No. of {flavours[userFlavour - 1]}:");
-                            userFlavourNo = Convert.ToInt32(Console.ReadLine().Trim());
-                            break;
-                        }
-                        catch (FormatException e)
-                        {
-                            Console.WriteLine(e.Message);
-                            Console.WriteLine("Enter a valid integer");
-                        }
-                        catch (Exception e)
-                        {
-                            Console.WriteLine(e.Message);
-                            Console.WriteLine("Enter a valid integer");
-                        }
-                    }
+                    userFlavourNo = integerValidator($"No. of {flavours[userFlavour - 1]}", 10);
 
                     //Validate if inputted number is within range
                     if (userFlavourNo == 0)
@@ -606,39 +537,26 @@ namespace Error404_PRG2_V2
                     //Validation for choosing of topping
                     while (true)
                     {
-                        try
+                        var userTopping = integerValidator("Enter topping", 4);
+                        userToppingList.Add(new Topping(toppings[userTopping - 1]));
+
+                        // Validate whether user want another topping
+                        while (true)
                         {
-                            Console.Write("Select Topping: ");
-                            var userTopping = Convert.ToInt32(Console.ReadLine().Trim());
-                            if (userTopping > 0 && userTopping < 5)
+                            Console.Write("Do you want another topping[y/n]: ");
+                            wantTopping = Console.ReadLine().Trim().ToLower();
+                            if (wantTopping != "y" && wantTopping != "n")
                             {
-                                userToppingList.Add(new Topping(toppings[userTopping - 1]));
-                                break;
+                                Console.WriteLine("Please enter either a 'y' or 'n'");
                             }
                             else
                             {
-                                Console.WriteLine("Please enter an integer between 1-4.");
+                                break;
                             }
                         }
-                        catch (FormatException e)
-                        {
-                            Console.WriteLine(e.Message);
-                            Console.WriteLine("Please enter an integer between 1-4.");
-                        }
-                    }
-                            
-                    //Validation for whether user want another topping
-                    while (true)
-                    {
-                        Console.Write("Do you want another topping[y/n]: ");
-                        wantTopping = Console.ReadLine().Trim().ToLower();
-                        if (wantTopping == "y" || wantTopping == "n")
+                        if (wantTopping == "n")
                         {
                             break;
-                        }
-                        else
-                        {
-                            Console.WriteLine("Please enter either a 'y' or 'n'");
                         }
                     }
                     if (wantTopping == "n")
@@ -661,28 +579,15 @@ namespace Error404_PRG2_V2
                 string option;
                 while (true)
                 {
-                    try
+                    Console.Write("Would you like your cone to be dipped in chocolate [y/n]: ");
+                    option = Console.ReadLine();
+                    if (option != "y" && option != "n")
                     {
-                        Console.Write("Would you like your cone to be dipped in chocolate [y/n]: ");
-                        option = Console.ReadLine();
-                        if (option != "y" || option != "n")
-                        {
-                            Console.WriteLine("Please enter either a 'y' or 'n'.\n");
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-                    catch (FormatException e)
-                    {
-                        Console.WriteLine(e.Message);
                         Console.WriteLine("Please enter either a 'y' or 'n'.\n");
                     }
-                    catch (Exception e)
+                    else
                     {
-                        Console.WriteLine(e.Message);
-                        Console.WriteLine("Please enter either a 'y' or 'n'.\n");
+                        break;
                     }
                 }
                 if (option == "y")
@@ -694,33 +599,21 @@ namespace Error404_PRG2_V2
                     IceCream cone = new Cone("Cone", scoops, userFlavourList, userToppingList, false);
                 }
             }
+            //If Waffle is chosen
             else if (selectedOption == 3)
             {
                 string option;
                 while (true)
                 {
-                    try
+                    Console.Write("Would you like your waffle to be a special flavour [y/n]: ");
+                    option = Console.ReadLine();
+                    if (option != "y" && option != "n")
                     {
-                        Console.Write("Would you like your waffle to be a special flavour [y/n]: ");
-                        option = Console.ReadLine();
-                        if (option != "y" || option != "n")
-                        {
-                            Console.WriteLine("Please enter either a 'y' or 'n'.\n");
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-                    catch (FormatException e)
-                    {
-                        Console.WriteLine(e.Message);
                         Console.WriteLine("Please enter either a 'y' or 'n'.\n");
                     }
-                    catch (Exception e)
+                    else
                     {
-                        Console.WriteLine(e.Message);
-                        Console.WriteLine("Please enter either a 'y' or 'n'.\n");
+                        break;
                     }
                 }
                 if (option == "y")
@@ -732,33 +625,8 @@ namespace Error404_PRG2_V2
                     }
 
                     // Data validation for special flavour
-                    int specialFlavourOption = 0;
-                    while (true)
-                    {
-                        try
-                        {
-                            Console.Write("Enter no. of special flavour: ");
-                            specialFlavourOption = Convert.ToInt32(Console.ReadLine().Trim());
-                            if (specialFlavourOption < 0 || specialFlavourOption > 3)
-                            {
-                                Console.WriteLine("Please enter an integer between 1-3.\n");
-                            }
-                            else
-                            {
-                                break;
-                            }
-                        }
-                        catch (FormatException e)
-                        {
-                            Console.WriteLine(e.Message);
-                            Console.WriteLine("Please enter an integer between 1-3.\n");
-                        }
-                        catch (Exception e)
-                        {
-                            Console.WriteLine(e.Message);
-                            Console.WriteLine("Please enter an integer between 1-3.\n");
-                        }
-                    }
+                    int specialFlavourOption = integerValidator("special flavour number", 3);
+
                     IceCream waffle = new Waffle("Waffle", scoops, userFlavourList, userToppingList, specialFlavour[specialFlavourOption - 1]);
                 }
                 else
@@ -848,7 +716,6 @@ namespace Error404_PRG2_V2
             // Method that returns valid customer
             //Customer selectedCustomer = selectCustomer(customerDict);
 
-
             //Test case
             string format = "dd/MM/yyyy HH:mm";
             string date = "20/01/2024 17:07";
@@ -864,7 +731,9 @@ namespace Error404_PRG2_V2
 
             Customer selectedCustomer = testSubject;
 
-            Console.WriteLine($"{selectedCustomer.Name}'s orders:\n==================================================");
+            // Listing of selected customer's order(s)
+            Console.WriteLine($"{selectedCustomer.Name}'s orders:\n==================================================\n");
+            int counter = 0;
             if (selectedCustomer.CurrentOrder == null)
             {
                 Console.WriteLine($"({selectedCustomer.Name}) has no current orders.");
@@ -873,13 +742,31 @@ namespace Error404_PRG2_V2
             {
                 foreach (IceCream iceCream in selectedCustomer.CurrentOrder.IceCreamList)
                 {
-                    Console.WriteLine(iceCream.ToString()); 
+                    Console.WriteLine($"Ice Cream ({counter+1})\n==============" + iceCream.ToString()); 
+                    counter++;
                 }
             }
 
-            Console.WriteLine("==================== MODIFICATION ====================\n[1] Modify existing Ice Cream\n[2] Add an Ice Cream\n" +
+            Console.WriteLine("\n==================== MODIFICATION ====================\n[1] Modify existing Ice Cream\n[2] Add an Ice Cream\n" +
                 "[3] Delete existing Ice Cream\n");
-            int option = integerValidator(3);
+            int option = integerValidator("option", 3);
+
+            // Option for modifying existing ice cream
+            if (option == 1)
+            {
+                // Selects ice cream to modify
+                if (counter > 1)
+                {
+                    Console.WriteLine("Which ice cream would you like to modify");
+                    int index = integerValidator("option", counter) - 1;
+                    IceCream modifyIceCream = selectedCustomer.CurrentOrder.IceCreamList[index];
+                }
+                else
+                {
+                    IceCream modifyIceCream = selectedCustomer.CurrentOrder.IceCreamList[0];
+                }
+                //Console.WriteLine("What would you like to modify?\n[1] Option\n[2] No. of scoops\n[3] Flavour\n[4] Topping");
+            }
             
         }
         
@@ -928,14 +815,14 @@ namespace Error404_PRG2_V2
 
         // Method that validates integers, limit represents choices from 1 to limit. 
         // Work in progress
-        static int integerValidator(int limit)
+        static int integerValidator(string prompt, int limit)
         {
             int option = 0;
             while (true)
             {
                 try
                 {
-                    Console.Write("Enter option: ");
+                    Console.Write($"Enter {prompt}: ");
                     option = Convert.ToInt32(Console.ReadLine());
                     if (option < 1 || option > limit)
                     {
