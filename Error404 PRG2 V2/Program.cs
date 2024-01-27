@@ -413,15 +413,17 @@ namespace Error404_PRG2_V2
             string customerFilePath = "customers.csv";
             try
             {
-                using (StreamWriter sw = new StreamWriter(customerFilePath, true))
+                using (StreamReader sw = new StreamReader(customerFilePath, true))
                 {
-                    sw.WriteLine($"{customer.Name},{customer.MemberID},{customer.Dob.ToShortDateString()}," +
-                        $"{customer.Rewards.Tier},{customer.Rewards.Points},{customer.Rewards.PunchCard}\n");
+                    sw.ReadLine();
+                    //sw.WriteLine($"{customer.Name},{customer.MemberID},{customer.Dob.ToShortDateString()}," +
+                    //    $"{customer.Rewards.Tier},{customer.Rewards.Points},{customer.Rewards.PunchCard}\n");
                 }
                 Console.WriteLine("Customer successfully appended to customers.csv");
             }
             catch(Exception e)
             {
+                Console.WriteLine(e);
                 Console.WriteLine(e.Message); 
             }
         }
@@ -430,10 +432,9 @@ namespace Error404_PRG2_V2
         static void Option4(Dictionary<int, Customer> customerDict)
         {
             List<string> options = new List<string>() { "Cup", "Cone", "Waffle" };
-            List<string> flavours = new List<string>() { "Vanilla", "Chocolate", "Strawberry", "Durian", "Ube", "Sea salt" };
-            List<string> toppings = new List<string>() { "Sprinkles", "Mochi", "Sago", "Oreos" };
-            List<string> specialFlavour = new List<string>() { "Red velvet", "Charcoal", "Pandan Waffle" };
             List<string> customerOptions = new List<string>();
+
+            int counter = 0;
             
             // Method that returns valid customer
             Customer selectedCustomer = selectCustomer(customerDict);
@@ -460,48 +461,8 @@ namespace Error404_PRG2_V2
             var scoops = integerValidator("No. of scoops from 1-3", 3);
 
             //List containing flavours chosen by user 
-            int counter;
-            int inputtedFlavours = 0;
-            while (inputtedFlavours != scoops)
-            {
-                counter = 1;
-                Console.WriteLine();
-                Console.WriteLine("Flavour Options");
-                foreach (var flavour in flavours)
-                {
-                    Console.WriteLine($"[{counter++}] {flavour}");
-                }
-                //Choose flavour 
-                int userFlavour = integerValidator("flavour number from 1-6", 6);
+            userFlavourList = choosingFlavours(scoops);
 
-                //Number of selected flavour 
-                var userFlavourNo = 0;
-
-                //Check that inputted flavours do not exceed number of scoops 
-                while (true)
-                {
-                    //Validate input type
-                    userFlavourNo = integerValidator($"No. of {flavours[userFlavour - 1]}", 10);
-
-                    //Validate if inputted number is within range
-                    if (userFlavourNo == 0)
-                    {
-                        Console.WriteLine("Number of flavour cannot be 0.");
-                    }
-                    else if ((inputtedFlavours + userFlavourNo) > scoops)
-                    {
-                        Console.WriteLine($"Exceeded number of flavours, please make sure its less than {scoops}");
-                    }
-                    else
-                    {
-                        inputtedFlavours += userFlavourNo;
-                        //Apending flavour to flavourList 
-                        bool isPremium = userFlavour > 3;
-                        userFlavourList.Add(new Flavour(flavours[userFlavour - 1], isPremium, userFlavourNo));
-                        break;
-                    }
-                }
-            }
             Console.WriteLine();
             //Ask if user want topping 
             var wantTopping = "";
@@ -524,46 +485,7 @@ namespace Error404_PRG2_V2
             // User wants topping 
             if (wantTopping == "y")
             {
-                for (int m = 1; m <= 4; m++)
-                {
-                    //Display topping options 
-                    Console.WriteLine();
-                    Console.WriteLine("Choose Topping");
-                    Console.WriteLine($"[1] {toppings[0]}");
-                    Console.WriteLine($"[2] {toppings[1]}");
-                    Console.WriteLine($"[3] {toppings[2]}");
-                    Console.WriteLine($"[4] {toppings[3]}");
-
-                    //Validation for choosing of topping
-                    while (true)
-                    {
-                        var userTopping = integerValidator("Enter topping", 4);
-                        userToppingList.Add(new Topping(toppings[userTopping - 1]));
-
-                        // Validate whether user want another topping
-                        while (true)
-                        {
-                            Console.Write("Do you want another topping[y/n]: ");
-                            wantTopping = Console.ReadLine().Trim().ToLower();
-                            if (wantTopping != "y" && wantTopping != "n")
-                            {
-                                Console.WriteLine("Please enter either a 'y' or 'n'");
-                            }
-                            else
-                            {
-                                break;
-                            }
-                        }
-                        if (wantTopping == "n")
-                        {
-                            break;
-                        }
-                    }
-                    if (wantTopping == "n")
-                    {
-                        break;
-                    }
-                }
+                userToppingList = choosingToppings();
             }
 
             //If Cup is chosen 
@@ -575,64 +497,12 @@ namespace Error404_PRG2_V2
             //If Cone is chosen
             else if (selectedOption == 2)
             {
-                // Data valiation whether user wants cone dipped in chocolate
-                string option;
-                while (true)
-                {
-                    Console.Write("Would you like your cone to be dipped in chocolate [y/n]: ");
-                    option = Console.ReadLine();
-                    if (option != "y" && option != "n")
-                    {
-                        Console.WriteLine("Please enter either a 'y' or 'n'.\n");
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-                if (option == "y")
-                {
-                    IceCream cone = new Cone("Cone", scoops, userFlavourList, userToppingList, true);
-                }
-                else
-                {
-                    IceCream cone = new Cone("Cone", scoops, userFlavourList, userToppingList, false);
-                }
+                IceCream cone = makeCone(scoops, userFlavourList, userToppingList);
             }
             //If Waffle is chosen
             else if (selectedOption == 3)
             {
-                string option;
-                while (true)
-                {
-                    Console.Write("Would you like your waffle to be a special flavour [y/n]: ");
-                    option = Console.ReadLine();
-                    if (option != "y" && option != "n")
-                    {
-                        Console.WriteLine("Please enter either a 'y' or 'n'.\n");
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-                if (option == "y")
-                {
-                    foreach (string flavour in specialFlavour)
-                    {
-                        counter = 1;
-                        Console.WriteLine($"[{counter}] {flavour}");
-                    }
-
-                    // Data validation for special flavour
-                    int specialFlavourOption = integerValidator("special flavour number", 3);
-
-                    IceCream waffle = new Waffle("Waffle", scoops, userFlavourList, userToppingList, specialFlavour[specialFlavourOption - 1]);
-                }
-                else
-                {
-                    IceCream waffle = new Waffle("Waffle", scoops, userFlavourList, userToppingList, "Original");
-                }
+                Waffle waffle = makeWaffle(scoops, userFlavourList, userToppingList);
             }
         }
 
@@ -754,18 +624,18 @@ namespace Error404_PRG2_V2
             // Option for modifying existing ice cream
             if (option == 1)
             {
-                // Selects ice cream to modify
+                IceCream selectedIceCream;
                 if (counter > 1)
                 {
                     Console.WriteLine("Which ice cream would you like to modify");
                     int index = integerValidator("option", counter) - 1;
-                    IceCream modifyIceCream = selectedCustomer.CurrentOrder.IceCreamList[index];
+                    selectedIceCream = selectedCustomer.CurrentOrder.IceCreamList[index];
                 }
                 else
                 {
-                    IceCream modifyIceCream = selectedCustomer.CurrentOrder.IceCreamList[0];
+                    selectedIceCream = selectedCustomer.CurrentOrder.IceCreamList[0];
                 }
-                //Console.WriteLine("What would you like to modify?\n[1] Option\n[2] No. of scoops\n[3] Flavour\n[4] Topping");
+                modifyIceCream(selectedIceCream);
             }
             
         }
@@ -814,7 +684,7 @@ namespace Error404_PRG2_V2
         }
 
         // Method that validates integers, limit represents choices from 1 to limit. 
-        // Work in progress
+        // Prompt to cater to different inputs
         static int integerValidator(string prompt, int limit)
         {
             int option = 0;
@@ -845,6 +715,255 @@ namespace Error404_PRG2_V2
                 }
             }
             return option;
+        }
+
+        static IceCream modifyIceCream(IceCream modifyIceCream)
+        {
+            string optionsFormat = "What would you like to modify?\n[1] Option\n[2] No. of scoops\n[3] Flavour\n[4] Topping";
+            int selectedOption = 0;
+            if (modifyIceCream.Option == "Cup")
+            {
+                Console.WriteLine(optionsFormat);
+                selectedOption = integerValidator("option", 4);
+            }
+            else if (modifyIceCream.Option == "Cone")
+            {
+                Console.WriteLine(optionsFormat + "\n[5] Dipped in Chocolate");
+                selectedOption = integerValidator("option", 5);
+            }
+            else
+            {
+                Console.WriteLine(optionsFormat + "\n[5] Waffle flavour");
+                selectedOption = integerValidator("option", 5);
+            }
+
+            // Modifying No. of scoops
+            if (selectedOption == 1)
+            {
+                List<string> options = new List<string>() { "Cup", "Cone", "Waffle", "Exit"};
+
+                Console.WriteLine("Select Ice Cream Option");
+                int i = 1;
+                foreach (var option in options)
+                {
+                    Console.WriteLine($"[{i++}] {option}");
+                }
+
+                // Validate user choosing of option
+                string differentOption;
+                while (true)
+                {
+                    int optionIndex = integerValidator("option", 4);
+                    if (modifyIceCream.Option == options[optionIndex - 1])
+                    {
+                        Console.WriteLine("Please do not choose the same option, else enter '0'\n");
+                    }
+                    else
+                    {
+                        differentOption = options[optionIndex - 1];
+                        break;
+                    }
+                }
+
+                if (differentOption == "Cup" && (modifyIceCream.Option == "Cone" || modifyIceCream.Option == "Waffle"))
+                {
+                    modifyIceCream = new Cup("Cup", modifyIceCream.Scoops, modifyIceCream.Flavours, modifyIceCream.Toppings);
+                }
+                else if ((modifyIceCream.Option == "Cone" || modifyIceCream.Option == "Cup") && differentOption == "Waffle")
+                {
+                    modifyIceCream = makeWaffle(modifyIceCream.Scoops, modifyIceCream.Flavours, modifyIceCream.Toppings);
+                }
+                else if ((modifyIceCream.Option == "Waffle" || modifyIceCream.Option == "Cup") && differentOption == "Cone")
+                {
+                    modifyIceCream = makeCone(modifyIceCream.Scoops, modifyIceCream.Flavours, modifyIceCream.Toppings);
+                }
+
+
+            }
+            else if (selectedOption == 2)
+            {
+                modifyIceCream.Scoops = integerValidator("option", 3);
+                modifyIceCream.Flavours = choosingFlavours(modifyIceCream.Scoops);
+            }
+            else if (selectedOption == 3)
+            {
+                modifyIceCream.Flavours = choosingFlavours(modifyIceCream.Scoops);
+            }
+            else if (selectedOption == 4)
+            {
+                modifyIceCream.Toppings = choosingToppings();
+            }
+            else if (selectedOption == 5 && modifyIceCream.Option == "Cone")
+            {
+                //modifyIceCream = modifyIceCream.Scoops, modifyIceCream.Flavours, modifyIceCream.Toppings);
+            }   
+
+            return modifyIceCream;
+        }
+
+        static List<Flavour> choosingFlavours(int scoops)
+        {
+            List<string> flavours = new List<string>() { "Vanilla", "Chocolate", "Strawberry", "Durian", "Ube", "Sea salt" };
+            List<Flavour> userFlavourList = new List<Flavour>();
+            int counter;
+            int inputtedFlavours = 0;
+            while (inputtedFlavours != scoops)
+            {
+                counter = 1;
+                Console.WriteLine();
+                Console.WriteLine("Flavour Options");
+                foreach (var flavour in flavours)
+                {
+                    Console.WriteLine($"[{counter++}] {flavour}");
+                }
+                //Choose flavour 
+                int userFlavour = integerValidator("flavour number from 1-6", 6);
+
+                //Number of selected flavour 
+                var userFlavourNo = 0;
+
+                //Check that inputted flavours do not exceed number of scoops 
+                while (true)
+                {
+                    //Validate input type
+                    userFlavourNo = integerValidator($"No. of {flavours[userFlavour - 1]}", 10);
+
+                    //Validate if inputted number is within range
+                    if (userFlavourNo == 0)
+                    {
+                        Console.WriteLine("Number of flavour cannot be 0.");
+                    }
+                    else if ((inputtedFlavours + userFlavourNo) > scoops)
+                    {
+                        Console.WriteLine($"Exceeded number of flavours, please make sure its less than {scoops}");
+                    }
+                    else
+                    {
+                        inputtedFlavours += userFlavourNo;
+                        //Apending flavour to flavourList 
+                        bool isPremium = userFlavour > 3;
+                        userFlavourList.Add(new Flavour(flavours[userFlavour - 1], isPremium, userFlavourNo));
+                        break;
+                    }
+                }
+            }
+            return userFlavourList;
+        }
+
+        static List<Topping> choosingToppings()
+        {
+            List<string> toppings = new List<string>() { "Sprinkles", "Mochi", "Sago", "Oreos" };
+            List<Topping> userToppingList = new List<Topping>();
+            string wantTopping;
+            for (int m = 1; m <= 4; m++)
+            {
+                //Display topping options 
+                Console.WriteLine();
+                Console.WriteLine("Choose Topping");
+                Console.WriteLine($"[1] {toppings[0]}");
+                Console.WriteLine($"[2] {toppings[1]}");
+                Console.WriteLine($"[3] {toppings[2]}");
+                Console.WriteLine($"[4] {toppings[3]}");
+
+                //Validation for choosing of topping
+                while (true)
+                {
+                    var userTopping = integerValidator("Enter topping", 4);
+                    userToppingList.Add(new Topping(toppings[userTopping - 1]));
+
+                    // Validate whether user want another topping
+                    while (true)
+                    {
+                        Console.Write("Do you want another topping[y/n]: ");
+                        wantTopping = Console.ReadLine().Trim().ToLower();
+                        if (wantTopping != "y" && wantTopping != "n")
+                        {
+                            Console.WriteLine("Please enter either a 'y' or 'n'");
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                    if (wantTopping == "n")
+                    {
+                        break;
+                    }
+                }
+                if (wantTopping == "n")
+                {
+                    break;
+                }
+            }
+            return userToppingList;
+        }
+
+        static Cone makeCone(int scoops, List<Flavour> userFlavourList, List<Topping> userToppingList)
+        {
+            string option;
+            Cone cone = null;
+            while (true)
+            {
+                Console.Write("Would you like your cone to be dipped in chocolate [y/n]: ");
+                option = Console.ReadLine();
+                if (option != "y" && option != "n")
+                {
+                    Console.WriteLine("Please enter either a 'y' or 'n'.\n");
+                }
+                else
+                {
+                    break;
+                }
+            }
+            if (option == "y")
+            {
+                cone = new Cone("Cone", scoops, userFlavourList, userToppingList, true);
+            }
+            else
+            {
+                cone = new Cone("Cone", scoops, userFlavourList, userToppingList, false);
+            }
+            return cone;
+        }
+
+        static Waffle makeWaffle(int scoops, List<Flavour> userFlavourList, List<Topping> userToppingList)
+        {
+            List<string> specialFlavour = new List<string>() { "Red velvet", "Charcoal", "Pandan Waffle" };
+            Waffle waffle = null;
+
+            string option;
+            int counter = 1;
+            while (true)
+            {
+                Console.Write("Would you like your waffle to be a special flavour [y/n]: ");
+                option = Console.ReadLine();
+                if (option != "y" && option != "n")
+                {
+                    Console.WriteLine("Please enter either a 'y' or 'n'.\n");
+                }
+                else
+                {
+                    break;
+                }
+            }
+            if (option == "y")
+            {
+                foreach (string flavour in specialFlavour)
+                {
+                    Console.WriteLine($"[{counter}] {flavour}");
+                    counter++;
+                }
+
+                // Data validation for special flavour
+                int specialFlavourOption = integerValidator("special flavour number", 3);
+
+                waffle = new Waffle("Waffle", scoops, userFlavourList, userToppingList, specialFlavour[specialFlavourOption - 1]);
+            }
+            else
+            {
+                waffle = new Waffle("Waffle", scoops, userFlavourList, userToppingList, "Original");
+            }
+            return waffle;
         }
     }
 }
