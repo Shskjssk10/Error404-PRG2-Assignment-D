@@ -1,8 +1,11 @@
-﻿using System;
+﻿using Microsoft.SqlServer.Server;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -97,6 +100,8 @@ namespace Error404_PRG2_V2
             // Creates customer objects and apends all PointCard relevant data into it. 
             // At the moment does not append orderHistory
             Dictionary<int, Customer> customerDict = new Dictionary<int, Customer>();
+
+            // Reading customer data from customers.csv to create Customer objects 
             using (StreamReader sr = new StreamReader("customers.csv"))
             {
                 string header = sr.ReadLine();
@@ -125,7 +130,7 @@ namespace Error404_PRG2_V2
 
             string format = "dd/MM/yyyy HH:mm";
 
-            // MemberID and OrderID respectively
+            // MemberID and OrderID respectively, used for referencing later.
             Dictionary<int, int> orderCustomerPairs = new Dictionary<int, int>();
             foreach(string line in orderContents)
             {
@@ -139,7 +144,7 @@ namespace Error404_PRG2_V2
                 }
             }
 
-            // Temp dictionary for storing orders.
+            // Temp dictionary for storing orders, used for referencing later.
             Dictionary<int, Order> tempOrderList = new Dictionary<int, Order>();
 
             // foreach loop to create order objects 
@@ -441,41 +446,12 @@ namespace Error404_PRG2_V2
             {
                 Console.WriteLine($"[{i++}] {option}");
             }
-            //choose waffle, cone or cup
-            var selectedOption = 0;
-
-            // Validation for IceCream option
-            while (true)
-            {
-                try
-                {
-                    Console.Write("Ice Cream Option: ");
-                    selectedOption = Convert.ToInt32(Console.ReadLine());
-                    if (selectedOption > 0 && selectedOption < 4)
-                    {
-                        break;
-                    }
-                    else
-                    {
-                        Console.WriteLine("Please ensure an integer between 1-3");
-                    }
-                }
-                catch (FormatException e)
-                {
-                    Console.WriteLine(e.Message);
-                    Console.WriteLine("Ensure that an integer between 1-3 is entered");
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e.Message);
-                    Console.WriteLine("Error occurred.");
-                }
-            }
+            //Choose Cup, Cone or Waffle.
+            int selectedOption = integerValidator(3);
 
             //Scoops, flavour and topping
 
-            //Initialise List
-
+            //Initialise flavour and topping Lists
             List<Flavour> userFlavourList = new List<Flavour>();
             List<Topping> userToppingList = new List<Topping>();
 
@@ -870,9 +846,25 @@ namespace Error404_PRG2_V2
         static void Option6(Dictionary<int, Customer> customerDict)
         {
             // Method that returns valid customer
-            Customer selectedCustomer = selectCustomer(customerDict);
+            //Customer selectedCustomer = selectCustomer(customerDict);
 
-            Console.WriteLine($"{selectedCustomer.Name}'s orders:\n======================================");
+
+            //Test case
+            string format = "dd/MM/yyyy HH:mm";
+            string date = "20/01/2024 17:07";
+            List<Flavour> cupFlavourList= new List<Flavour>() { new Flavour("Vanilla", false, 1) , new Flavour("Chocolate", false, 1) };
+            List<Topping> cupToppingList = new List<Topping>() { new Topping("Sprinkles"), new Topping("Mochi") };
+            List<Flavour> coneFlavourList = new List<Flavour>() { new Flavour("Vanilla", false, 2), new Flavour("Sea salt", true, 1)};
+            List<Topping> coneToppingList = new List<Topping>() { new Topping("Oreos"), new Topping("Sago")};
+
+            Customer testSubject = new Customer("Test Subject", 111111, new DateTime(1111,1,1));
+            testSubject.CurrentOrder = new Order(6, DateTime.ParseExact(date, format, null));
+            testSubject.CurrentOrder.AddIceCream(new Cup("Cup", 2, cupFlavourList, cupToppingList));
+            testSubject.CurrentOrder.AddIceCream(new Cone("Cone", 2, coneFlavourList, coneToppingList, true));
+
+            Customer selectedCustomer = testSubject;
+
+            Console.WriteLine($"{selectedCustomer.Name}'s orders:\n==================================================");
             if (selectedCustomer.CurrentOrder == null)
             {
                 Console.WriteLine($"({selectedCustomer.Name}) has no current orders.");
@@ -884,6 +876,11 @@ namespace Error404_PRG2_V2
                     Console.WriteLine(iceCream.ToString()); 
                 }
             }
+
+            Console.WriteLine("==================== MODIFICATION ====================\n[1] Modify existing Ice Cream\n[2] Add an Ice Cream\n" +
+                "[3] Delete existing Ice Cream\n");
+            int option = integerValidator(3);
+            
         }
         
         // Method that validates and returns customer
@@ -927,6 +924,40 @@ namespace Error404_PRG2_V2
                 }
             }
             return selectedCustomer;
+        }
+
+        // Method that validates integers, limit represents choices from 1 to limit. 
+        // Work in progress
+        static int integerValidator(int limit)
+        {
+            int option = 0;
+            while (true)
+            {
+                try
+                {
+                    Console.Write("Enter option: ");
+                    option = Convert.ToInt32(Console.ReadLine());
+                    if (option < 1 || option > limit)
+                    {
+                        Console.WriteLine($"Please enter an option between 1-{limit}\n");
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                catch (FormatException e)
+                {
+                    Console.WriteLine(e.Message);
+                    Console.WriteLine($"Please enter an option between 1-{limit}\n");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                    Console.WriteLine($"Please enter an option between 1-{limit}\n");
+                }
+            }
+            return option;
         }
     }
 }
