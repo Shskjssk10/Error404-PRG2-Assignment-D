@@ -64,13 +64,13 @@ namespace Error404_PRG2_V2
                 else if (option == "7")
                 {
                     Console.WriteLine();
-                    Option6(customerDict);
+                    Option7(customerDict);
                     Console.WriteLine();
                 }
                 else if (option == "8")
                 {
                     Console.WriteLine();
-                    Option6(customerDict);
+                    Option8(customerDict);
                     Console.WriteLine();
                 }
                 else if (option == "0")
@@ -102,6 +102,7 @@ namespace Error404_PRG2_V2
             }
         }
 
+        // Method for menu interface
         static void MenuInterface()
         {
             Console.Write("================= MENU INTERFACE =================\n[1] List all customers\n[2] List all current orders\n[3] Register" +
@@ -109,6 +110,7 @@ namespace Error404_PRG2_V2
                 "\n[8] Display Financial Details\n[0] Exit\n==================================================\nEnter option: ");
         }
 
+        // Method for initiating data
         static Dictionary<int, Customer> InitData()
         {
             // Creates customer objects and apends all PointCard relevant data into it. 
@@ -283,6 +285,7 @@ namespace Error404_PRG2_V2
 
             return customerDict;
         }
+
         // Completed 
         static void Option1(Dictionary<int, Customer> customerDict)
         {
@@ -610,13 +613,151 @@ namespace Error404_PRG2_V2
         //Incomplete
         static void Option7(Dictionary<int, Customer> customerDict)
         {
+            Queue<Customer> goldQueue = new Queue<Customer>();
+            Queue<Customer> regularQueue = new Queue<Customer>();
 
+            List<Customer> filteredCustomerList = new List<Customer>();
+
+            // Filter customers with current orders 
+            foreach (Customer customer in customerDict.Values)
+            {
+                if (customer.CurrentOrder != null)
+                {
+                    filteredCustomerList.Add(customer);
+                }
+            }
+
+            foreach (Customer customer in filteredCustomerList)
+            {
+                if (customer.Rewards.Tier == "Gold")
+                {
+                    goldQueue.Enqueue(customer);
+                }
+                else
+                {
+                    regularQueue.Enqueue(customer);
+                }
+            }
+            
+            if (goldQueue.Count > 0)
+            {
+                Customer customer = goldQueue.Dequeue();
+                Console.WriteLine("============= DEQUEUED ORDER =============");
+                IceCream mostExpensiveIceCream = null;
+                double mostCost = 0;
+                double totalCost = 0;
+
+                List<IceCream> iceCreamOrders = customer.CurrentOrder.IceCreamList;
+
+                foreach (IceCream iceCream in iceCreamOrders)
+                {
+                    Console.WriteLine(iceCream.ToString() + $"Cost: {iceCream.CalculatePrice()}");
+                    if (iceCream.CalculatePrice() > mostCost)
+                    {
+                        mostCost = iceCream.CalculatePrice();
+                        mostExpensiveIceCream = iceCream;
+                    }
+                    totalCost += iceCream.CalculatePrice();
+                }
+
+                Console.WriteLine(customer.Rewards.ToString());
+                if (customer.Dob == DateTime.Today)
+                {
+                    totalCost -= mostExpensiveIceCream.CalculatePrice();
+                }
+
+                if (customer.Rewards.PunchCard == 10)
+                {
+                    if (iceCreamOrders[0] != mostExpensiveIceCream)
+                    {
+                        totalCost -= iceCreamOrders[0].CalculatePrice();
+                    }
+                }
+
+                if (customer.Rewards.Tier != "Ordinary")
+                {
+                    Console.WriteLine($"You have {customer.Rewards.Points} points. How many would you like to use?");
+                    int pointsUsed = integerValidator("number of points", customer.Rewards.Points);
+                    double costOffset = pointsUsed * 0.02;
+                    totalCost -= costOffset;
+                }
+
+                Console.WriteLine($"Final Cost: {totalCost}");
+
+                Console.Write("Press any key to proceed");
+                Console.ReadLine();
+
+                customer.Rewards.Punch();
+
+                // Need to do Math.Floor()
+                customer.Rewards.AddPoints(Convert.ToInt32((totalCost * 0.72, 0, MidpointRounding.AwayFromZero)));
+
+                string format = "dd/MM/yyyy HH:mm";
+                string dateFulfilled = Convert.ToString(DateTime.Now);
+                customer.CurrentOrder.TimeFulfilled = DateTime.ParseExact(dateFulfilled, format, null);
+
+                customer.OrderHistory.Add(customer.CurrentOrder);
+                customer.CurrentOrder = null;
+            }
         }
 
         // Incomplete
         static void Option8(Dictionary<int, Customer> customerDict)
         {
+            int inputtedYear = 0;
+            List<String> months = new List<String>() { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Oct", "Nov", "Dec" };
+            // Validate year
+            while (true)
+            {
+                try
+                {
+                    Console.Write("Enter the year: ");
+                    inputtedYear = Convert.ToInt32(Console.ReadLine());
+                    if (inputtedYear.ToString().Length != 4) 
+                    {
+                        Console.WriteLine("Please enter a year that has 4 digits");
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                catch (FormatException e)
+                {
+                    Console.WriteLine(e.Message);
+                }
+            }
 
+            double monthlyTotal = 0;
+            double grandTotal = 0;
+
+            List<double> monthlyTotalList = new List<double>();
+
+            foreach (string month in months)
+            {
+                monthlyTotal = 0;
+                int monthlyIndex = months.IndexOf(month);
+                foreach (Customer customer in customerDict.Values)
+                {
+                    foreach (Order order in customer.OrderHistory)
+                    {
+                        if (order.TimeReceived.Month == monthlyIndex && order.TimeReceived.Year == inputtedYear)
+                        foreach(IceCream iceCream in order.IceCreamList)
+                        {
+                            monthlyTotal += iceCream.CalculatePrice();
+                        }
+                    }
+                }
+                monthlyTotalList.Add(monthlyTotal);
+                grandTotal += monthlyTotal;
+            }
+
+            int counter = 0;
+            foreach (double total in monthlyTotalList)
+            {
+                Console.WriteLine($"{months[counter]} {inputtedYear}:  ${total}");
+            }
+            Console.WriteLine($"\nTotal:        {grandTotal}");
         }
         
         // Method that validates and returns customer
@@ -694,102 +835,6 @@ namespace Error404_PRG2_V2
                 }
             }
             return option;
-        }
-
-        static IceCream modifyIceCream(IceCream modifyIceCream)
-        {
-            string optionsFormat = "\nWhat would you like to modify?\n[1] Option\n[2] No. of scoops\n[3] Flavour\n[4] Topping";
-            int selectedOption = 0;
-            if (modifyIceCream.Option == "Cup")
-            {
-                Console.WriteLine(optionsFormat);
-                selectedOption = integerValidator("option", 4);
-            }
-            else if (modifyIceCream.Option == "Cone")
-            {
-                Console.WriteLine(optionsFormat + "\n[5] Dipped in Chocolate");
-                selectedOption = integerValidator("option", 5);
-            }
-            else
-            {
-                Console.WriteLine(optionsFormat + "\n[5] Waffle flavour");
-                selectedOption = integerValidator("option", 5);
-            }
-
-            // Modifying No. of scoops
-            if (selectedOption == 1)
-            {
-                List<string> options = new List<string>() { "Cup", "Cone", "Waffle", "Exit"};
-
-                Console.WriteLine("Select Ice Cream Option");
-                int i = 1;
-                foreach (var option in options)
-                {
-                    Console.WriteLine($"[{i++}] {option}");
-                }
-
-                // Validate user choosing of option
-                string differentOption;
-                while (true)
-                {
-                    int optionIndex = integerValidator("option", 4);
-                    if (modifyIceCream.Option == options[optionIndex - 1])
-                    {
-                        Console.WriteLine("You selected the same option.\n Exit if you do not want to change.\n");
-                    }
-                    else
-                    {
-                        differentOption = options[optionIndex - 1];
-                        break;
-                    }
-                }
-
-                if (differentOption == "Cup" && (modifyIceCream.Option == "Cone" || modifyIceCream.Option == "Waffle"))
-                {
-                    modifyIceCream = new Cup("Cup", modifyIceCream.Scoops, modifyIceCream.Flavours, modifyIceCream.Toppings);
-                    Console.WriteLine($"\n{modifyIceCream.Option} has been successfully modified!\n{modifyIceCream.ToString()}");
-                }
-                else if ((modifyIceCream.Option == "Cone" || modifyIceCream.Option == "Cup") && differentOption == "Waffle")
-                {
-                    modifyIceCream = makeWaffle(modifyIceCream.Scoops, modifyIceCream.Flavours, modifyIceCream.Toppings);
-                    Console.WriteLine($"\n{modifyIceCream.Option} has been successfully modified!\n{modifyIceCream.ToString()}");
-                }
-                else if ((modifyIceCream.Option == "Waffle" || modifyIceCream.Option == "Cup") && differentOption == "Cone")
-                {
-                    modifyIceCream = makeCone(modifyIceCream.Scoops, modifyIceCream.Flavours, modifyIceCream.Toppings);
-                    Console.WriteLine($"\n{modifyIceCream.Option} has been successfully modified!\n{modifyIceCream.ToString()}");
-                }
-
-
-            }
-            else if (selectedOption == 2)
-            {
-                modifyIceCream.Scoops = integerValidator("no. of scoops (1-3)", 3);
-                modifyIceCream.Flavours = choosingFlavours(modifyIceCream.Scoops);
-                Console.WriteLine($"\n{modifyIceCream.Option} has been successfully modified!\n{modifyIceCream.ToString()}");
-            }
-            else if (selectedOption == 3)
-            {
-                modifyIceCream.Flavours = choosingFlavours(modifyIceCream.Scoops);
-                Console.WriteLine($"\n{modifyIceCream.Option} has been successfully modified!\n{modifyIceCream.ToString()}");
-            }
-            else if (selectedOption == 4)
-            {
-                modifyIceCream.Toppings = choosingToppings();
-                Console.WriteLine($"\n{modifyIceCream.Option} has been successfully modified!\n{modifyIceCream.ToString()}");
-            }
-            else if (selectedOption == 5 && modifyIceCream.Option == "Cone")
-            {
-                modifyIceCream = makeCone(modifyIceCream.Scoops, modifyIceCream.Flavours, modifyIceCream.Toppings);
-                Console.WriteLine($"\n{modifyIceCream.Option} has been successfully modified!\n{modifyIceCream.ToString()}");
-            }
-            else if (selectedOption == 5 && modifyIceCream.Option == "Waffle")
-            {
-                modifyIceCream = makeWaffle(modifyIceCream.Scoops, modifyIceCream.Flavours, modifyIceCream.Toppings);
-                Console.WriteLine($"\n{modifyIceCream.Option} has been successfully modified!\n{modifyIceCream.ToString()}");
-            }
-
-            return modifyIceCream;
         }
 
         static List<Flavour> choosingFlavours(int scoops)
@@ -887,6 +932,102 @@ namespace Error404_PRG2_V2
                 }
             }
             return userToppingList;
+        }
+
+        static IceCream modifyIceCream(IceCream modifyIceCream)
+        {
+            string optionsFormat = "\nWhat would you like to modify?\n[1] Option\n[2] No. of scoops\n[3] Flavour\n[4] Topping";
+            int selectedOption = 0;
+            if (modifyIceCream.Option == "Cup")
+            {
+                Console.WriteLine(optionsFormat);
+                selectedOption = integerValidator("option", 4);
+            }
+            else if (modifyIceCream.Option == "Cone")
+            {
+                Console.WriteLine(optionsFormat + "\n[5] Dipped in Chocolate");
+                selectedOption = integerValidator("option", 5);
+            }
+            else
+            {
+                Console.WriteLine(optionsFormat + "\n[5] Waffle flavour");
+                selectedOption = integerValidator("option", 5);
+            }
+
+            // Modifying No. of scoops
+            if (selectedOption == 1)
+            {
+                List<string> options = new List<string>() { "Cup", "Cone", "Waffle", "Exit"};
+
+                Console.WriteLine("Select Ice Cream Option");
+                int i = 1;
+                foreach (var option in options)
+                {
+                    Console.WriteLine($"[{i++}] {option}");
+                }
+
+                // Validate user choosing of option
+                string differentOption;
+                while (true)
+                {
+                    int optionIndex = integerValidator("option", 4);
+                    if (modifyIceCream.Option == options[optionIndex - 1])
+                    {
+                        Console.WriteLine("You selected the same option.\n Exit if you do not want to change.\n");
+                    }
+                    else
+                    {
+                        differentOption = options[optionIndex - 1];
+                        break;
+                    }
+                }
+
+                if (differentOption == "Cup" && (modifyIceCream.Option == "Cone" || modifyIceCream.Option == "Waffle"))
+                {
+                    modifyIceCream = new Cup("Cup", modifyIceCream.Scoops, modifyIceCream.Flavours, modifyIceCream.Toppings);
+                    Console.WriteLine($"\n{modifyIceCream.Option} has been successfully modified!\n{modifyIceCream.ToString()}");
+                }
+                else if ((modifyIceCream.Option == "Cone" || modifyIceCream.Option == "Cup") && differentOption == "Waffle")
+                {
+                    modifyIceCream = makeWaffle(modifyIceCream.Scoops, modifyIceCream.Flavours, modifyIceCream.Toppings);
+                    Console.WriteLine($"\n{modifyIceCream.Option} has been successfully modified!\n{modifyIceCream.ToString()}");
+                }
+                else if ((modifyIceCream.Option == "Waffle" || modifyIceCream.Option == "Cup") && differentOption == "Cone")
+                {
+                    modifyIceCream = makeCone(modifyIceCream.Scoops, modifyIceCream.Flavours, modifyIceCream.Toppings);
+                    Console.WriteLine($"\n{modifyIceCream.Option} has been successfully modified!\n{modifyIceCream.ToString()}");
+                }
+
+
+            }
+            else if (selectedOption == 2)
+            {
+                modifyIceCream.Scoops = integerValidator("no. of scoops (1-3)", 3);
+                modifyIceCream.Flavours = choosingFlavours(modifyIceCream.Scoops);
+                Console.WriteLine($"\n{modifyIceCream.Option} has been successfully modified!\n{modifyIceCream.ToString()}");
+            }
+            else if (selectedOption == 3)
+            {
+                modifyIceCream.Flavours = choosingFlavours(modifyIceCream.Scoops);
+                Console.WriteLine($"\n{modifyIceCream.Option} has been successfully modified!\n{modifyIceCream.ToString()}");
+            }
+            else if (selectedOption == 4)
+            {
+                modifyIceCream.Toppings = choosingToppings();
+                Console.WriteLine($"\n{modifyIceCream.Option} has been successfully modified!\n{modifyIceCream.ToString()}");
+            }
+            else if (selectedOption == 5 && modifyIceCream.Option == "Cone")
+            {
+                modifyIceCream = makeCone(modifyIceCream.Scoops, modifyIceCream.Flavours, modifyIceCream.Toppings);
+                Console.WriteLine($"\n{modifyIceCream.Option} has been successfully modified!\n{modifyIceCream.ToString()}");
+            }
+            else if (selectedOption == 5 && modifyIceCream.Option == "Waffle")
+            {
+                modifyIceCream = makeWaffle(modifyIceCream.Scoops, modifyIceCream.Flavours, modifyIceCream.Toppings);
+                Console.WriteLine($"\n{modifyIceCream.Option} has been successfully modified!\n{modifyIceCream.ToString()}");
+            }
+
+            return modifyIceCream;
         }
 
         static Cone makeCone(int scoops, List<Flavour> userFlavourList, List<Topping> userToppingList)

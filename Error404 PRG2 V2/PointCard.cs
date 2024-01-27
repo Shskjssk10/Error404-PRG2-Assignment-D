@@ -64,16 +64,16 @@ namespace Error404_PRG2_V2
 
         public void Punch()
         {
-            PunchCard += 1;
+            punchCard += 1;
             if (PunchCard == 11)
             {
-                PunchCard = 0;
+                punchCard = 0;
             }
         }
 
         public override string ToString()
         {
-            return $"{Points}, {PunchCard}, {Tier}";
+            return $"Membership Status: {tier}\nPoints: {points}\nPunch Card: {punchCard}";
         }
     }
 }
