@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -413,11 +414,10 @@ namespace Error404_PRG2_V2
             string customerFilePath = "customers.csv";
             try
             {
-                using (StreamReader sw = new StreamReader(customerFilePath, true))
+                using (StreamWriter sw = new StreamWriter(customerFilePath, true))
                 {
-                    sw.ReadLine();
-                    //sw.WriteLine($"{customer.Name},{customer.MemberID},{customer.Dob.ToShortDateString()}," +
-                    //    $"{customer.Rewards.Tier},{customer.Rewards.Points},{customer.Rewards.PunchCard}\n");
+                    sw.WriteLine($"{customer.Name},{customer.MemberID},{customer.Dob.ToShortDateString()}," +
+                        $"{customer.Rewards.Tier},{customer.Rewards.Points},{customer.Rewards.PunchCard}\n");
                 }
                 Console.WriteLine("Customer successfully appended to customers.csv");
             }
@@ -431,79 +431,11 @@ namespace Error404_PRG2_V2
         // Option4 Incomplete. Order not appended to orders.csv
         static void Option4(Dictionary<int, Customer> customerDict)
         {
-            List<string> options = new List<string>() { "Cup", "Cone", "Waffle" };
-            List<string> customerOptions = new List<string>();
-
-            int counter = 0;
-            
-            // Method that returns valid customer
             Customer selectedCustomer = selectCustomer(customerDict);
 
             Order order = new Order(selectedCustomer.MemberID, DateTime.Now);
 
-            Console.WriteLine();
-            Console.WriteLine("Select Ice Cream Option");
-            int i = 1;
-            foreach (var option in options)
-            {
-                Console.WriteLine($"[{i++}] {option}");
-            }
-            //Choose Cup, Cone or Waffle.
-            int selectedOption = integerValidator("option", 3);
-
-            //Scoops, flavour and topping
-
-            //Initialise flavour and topping Lists
-            List<Flavour> userFlavourList = new List<Flavour>();
-            List<Topping> userToppingList = new List<Topping>();
-
-            //Choose no. of scoops 
-            var scoops = integerValidator("No. of scoops from 1-3", 3);
-
-            //List containing flavours chosen by user 
-            userFlavourList = choosingFlavours(scoops);
-
-            Console.WriteLine();
-            //Ask if user want topping 
-            var wantTopping = "";
-
-            // Validate whether user wants toppings
-            while (true)
-            {
-                Console.Write("Do you want toppings[y/n]: ");
-                wantTopping = Console.ReadLine().Trim().ToLower();
-                if (wantTopping == "y" || wantTopping == "n")
-                {
-                    break;
-                }
-                else
-                {
-                    Console.WriteLine("Please enter either a 'y' or 'n'");
-                }
-            }
-
-            // User wants topping 
-            if (wantTopping == "y")
-            {
-                userToppingList = choosingToppings();
-            }
-
-            //If Cup is chosen 
-            if (selectedOption == 1)
-            {
-                IceCream cup = new Cup("Cup", scoops, userFlavourList, userToppingList);
-                Console.WriteLine(cup.ToString());
-            }
-            //If Cone is chosen
-            else if (selectedOption == 2)
-            {
-                IceCream cone = makeCone(scoops, userFlavourList, userToppingList);
-            }
-            //If Waffle is chosen
-            else if (selectedOption == 3)
-            {
-                Waffle waffle = makeWaffle(scoops, userFlavourList, userToppingList);
-            }
+            IceCream iceCream = makeIceCream();
         }
 
         // Completed 
@@ -580,7 +512,7 @@ namespace Error404_PRG2_V2
             }
         }
 
-        // Option 6 incomplete, require option 4 to begin with.
+        // Logic completed. Requires testing with option4 
         static void Option6(Dictionary<int, Customer> customerDict)
         {
             // Method that returns valid customer
@@ -627,7 +559,7 @@ namespace Error404_PRG2_V2
                 IceCream selectedIceCream;
                 if (counter > 1)
                 {
-                    Console.WriteLine("Which ice cream would you like to modify");
+                    Console.WriteLine("\nWhich ice cream would you like to modify");
                     int index = integerValidator("option", counter) - 1;
                     selectedIceCream = selectedCustomer.CurrentOrder.IceCreamList[index];
                 }
@@ -636,6 +568,25 @@ namespace Error404_PRG2_V2
                     selectedIceCream = selectedCustomer.CurrentOrder.IceCreamList[0];
                 }
                 modifyIceCream(selectedIceCream);
+            }
+            else if (option == 2)
+            {
+                IceCream iceCream = makeIceCream();
+                selectedCustomer.CurrentOrder.AddIceCream(iceCream);
+                Console.WriteLine("Ice Cream has been successfully added!");
+            }
+            else
+            {
+                if (selectedCustomer.CurrentOrder.IceCreamList.Count != 1)
+                {
+                    int deletedIceCreamOption = integerValidator("Ice Cream to delete", selectedCustomer.CurrentOrder.IceCreamList.Count);
+                    selectedCustomer.CurrentOrder.IceCreamList.RemoveAt(deletedIceCreamOption-1);
+                    Console.WriteLine("Ice Cream has been successfully deleted!");
+                }
+                else
+                {
+                    Console.WriteLine("Cannot remove ice cream. Orders may not have 0 orders.");
+                }
             }
             
         }
@@ -719,7 +670,7 @@ namespace Error404_PRG2_V2
 
         static IceCream modifyIceCream(IceCream modifyIceCream)
         {
-            string optionsFormat = "What would you like to modify?\n[1] Option\n[2] No. of scoops\n[3] Flavour\n[4] Topping";
+            string optionsFormat = "\nWhat would you like to modify?\n[1] Option\n[2] No. of scoops\n[3] Flavour\n[4] Topping";
             int selectedOption = 0;
             if (modifyIceCream.Option == "Cup")
             {
@@ -756,7 +707,7 @@ namespace Error404_PRG2_V2
                     int optionIndex = integerValidator("option", 4);
                     if (modifyIceCream.Option == options[optionIndex - 1])
                     {
-                        Console.WriteLine("Please do not choose the same option, else enter '0'\n");
+                        Console.WriteLine("You selected the same option.\n Exit if you do not want to change.\n");
                     }
                     else
                     {
@@ -768,35 +719,47 @@ namespace Error404_PRG2_V2
                 if (differentOption == "Cup" && (modifyIceCream.Option == "Cone" || modifyIceCream.Option == "Waffle"))
                 {
                     modifyIceCream = new Cup("Cup", modifyIceCream.Scoops, modifyIceCream.Flavours, modifyIceCream.Toppings);
+                    Console.WriteLine($"\n{modifyIceCream.Option} has been successfully modified!\n{modifyIceCream.ToString()}");
                 }
                 else if ((modifyIceCream.Option == "Cone" || modifyIceCream.Option == "Cup") && differentOption == "Waffle")
                 {
                     modifyIceCream = makeWaffle(modifyIceCream.Scoops, modifyIceCream.Flavours, modifyIceCream.Toppings);
+                    Console.WriteLine($"\n{modifyIceCream.Option} has been successfully modified!\n{modifyIceCream.ToString()}");
                 }
                 else if ((modifyIceCream.Option == "Waffle" || modifyIceCream.Option == "Cup") && differentOption == "Cone")
                 {
                     modifyIceCream = makeCone(modifyIceCream.Scoops, modifyIceCream.Flavours, modifyIceCream.Toppings);
+                    Console.WriteLine($"\n{modifyIceCream.Option} has been successfully modified!\n{modifyIceCream.ToString()}");
                 }
 
 
             }
             else if (selectedOption == 2)
             {
-                modifyIceCream.Scoops = integerValidator("option", 3);
+                modifyIceCream.Scoops = integerValidator("no. of scoops (1-3)", 3);
                 modifyIceCream.Flavours = choosingFlavours(modifyIceCream.Scoops);
+                Console.WriteLine($"\n{modifyIceCream.Option} has been successfully modified!\n{modifyIceCream.ToString()}");
             }
             else if (selectedOption == 3)
             {
                 modifyIceCream.Flavours = choosingFlavours(modifyIceCream.Scoops);
+                Console.WriteLine($"\n{modifyIceCream.Option} has been successfully modified!\n{modifyIceCream.ToString()}");
             }
             else if (selectedOption == 4)
             {
                 modifyIceCream.Toppings = choosingToppings();
+                Console.WriteLine($"\n{modifyIceCream.Option} has been successfully modified!\n{modifyIceCream.ToString()}");
             }
             else if (selectedOption == 5 && modifyIceCream.Option == "Cone")
             {
-                //modifyIceCream = modifyIceCream.Scoops, modifyIceCream.Flavours, modifyIceCream.Toppings);
-            }   
+                modifyIceCream = makeCone(modifyIceCream.Scoops, modifyIceCream.Flavours, modifyIceCream.Toppings);
+                Console.WriteLine($"\n{modifyIceCream.Option} has been successfully modified!\n{modifyIceCream.ToString()}");
+            }
+            else if (selectedOption == 5 && modifyIceCream.Option == "Waffle")
+            {
+                modifyIceCream = makeWaffle(modifyIceCream.Scoops, modifyIceCream.Flavours, modifyIceCream.Toppings);
+                Console.WriteLine($"\n{modifyIceCream.Option} has been successfully modified!\n{modifyIceCream.ToString()}");
+            }
 
             return modifyIceCream;
         }
@@ -868,7 +831,7 @@ namespace Error404_PRG2_V2
                 //Validation for choosing of topping
                 while (true)
                 {
-                    var userTopping = integerValidator("Enter topping", 4);
+                    var userTopping = integerValidator("topping", 4);
                     userToppingList.Add(new Topping(toppings[userTopping - 1]));
 
                     // Validate whether user want another topping
@@ -964,6 +927,75 @@ namespace Error404_PRG2_V2
                 waffle = new Waffle("Waffle", scoops, userFlavourList, userToppingList, "Original");
             }
             return waffle;
+        }
+
+        static IceCream makeIceCream()
+        {
+            List<string> options = new List<string>() { "Cup", "Cone", "Waffle" };
+            IceCream icecream = null;
+
+            Console.WriteLine();
+            Console.WriteLine("Select Ice Cream Option");
+            int i = 1;
+            foreach (var option in options)
+            {
+                Console.WriteLine($"[{i++}] {option}");
+            }
+            //Choose Cup, Cone or Waffle.
+            int selectedOption = integerValidator("option", 3);
+
+            //Scoops, flavour and topping
+
+            //Initialise flavour and topping Lists
+            List<Flavour> userFlavourList = new List<Flavour>();
+            List<Topping> userToppingList = new List<Topping>();
+
+            //Choose no. of scoops 
+            var scoops = integerValidator("No. of scoops from 1-3", 3);
+
+            //List containing flavours chosen by user 
+            userFlavourList = choosingFlavours(scoops);
+
+            Console.WriteLine();
+            //Ask if user want topping 
+            var wantTopping = "";
+
+            // Validate whether user wants toppings
+            while (true)
+            {
+                Console.Write("Do you want toppings[y/n]: ");
+                wantTopping = Console.ReadLine().Trim().ToLower();
+                if (wantTopping == "y" || wantTopping == "n")
+                {
+                    break;
+                }
+                else
+                {
+                    Console.WriteLine("Please enter either a 'y' or 'n'");
+                }
+            }
+
+            // User wants topping 
+            if (wantTopping == "y")
+            {
+                userToppingList = choosingToppings();
+            }
+
+            //If Cup is chosen 
+            if (selectedOption == 1)
+            {
+                return icecream = new Cup("Cup", scoops, userFlavourList, userToppingList);
+            }
+            //If Cone is chosen
+            else if (selectedOption == 2)
+            {
+                return icecream = makeCone(scoops, userFlavourList, userToppingList);
+            }
+            //If Waffle is chosen
+            else
+            {
+                return icecream = makeWaffle(scoops, userFlavourList, userToppingList);
+            }
         }
     }
 }
