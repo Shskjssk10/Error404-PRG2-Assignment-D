@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.SymbolStore;
 using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
@@ -445,7 +446,16 @@ namespace Error404_PRG2_V2
         {
             Customer selectedCustomer = selectCustomer(customerDict);
 
-            selectedCustomer.CurrentOrder = new Order(selectedCustomer.MemberID, DateTime.Now);
+            string[] contents = File.ReadAllLines("orders.csv");
+
+            // Parse the formatted string back to DateTime
+            DateTime formattedDateAndTime = DateTime.ParseExact(DateTime.Today.ToString("dd/MM/yyyy HH:mm"), "dd/MM/yyyy HH:mm", null);
+
+            // Checks last orderID of orders.csv and gives new ID of +1
+            selectedCustomer.CurrentOrder = new Order(Convert.ToInt16(contents.Last().Split(',').First()) + 1, formattedDateAndTime);
+
+            IceCream iceCream = makeIceCream();
+            selectedCustomer.CurrentOrder.AddIceCream(iceCream);
 
             string option;
             while (true)
@@ -454,13 +464,23 @@ namespace Error404_PRG2_V2
                 option = Console.ReadLine();
                 if (option == "y")
                 {
-                    IceCream iceCream = makeIceCream();
-                    selectedCustomer.CurrentOrder.AddIceCream(iceCream);
                     Console.WriteLine($"Ice Cream has been succesfully added to {selectedCustomer.Name} current order!");
                 }
                 else if (option == "n")
                 {
                     Console.WriteLine("Order has been succesfully created!");
+
+                    // Preparing data to append to orders.csv
+
+                    foreach(IceCream item in selectedCustomer.CurrentOrder.IceCreamList)
+                    {
+                        string finalAppendLine = csvLineFormatter(item, selectedCustomer);
+
+                        using (StreamWriter sw = new StreamWriter("orders.csv", true))
+                        {
+                            sw.WriteLine(finalAppendLine);
+                        }
+                    }
                     break;
                 }
                 else
@@ -549,22 +569,37 @@ namespace Error404_PRG2_V2
         static void Option6(Dictionary<int, Customer> customerDict)
         {
             // Method that returns valid customer
-            //Customer selectedCustomer = selectCustomer(customerDict);
+            Customer selectedCustomer = selectCustomer(customerDict);
 
-            //Test case
-            string format = "dd/MM/yyyy HH:mm";
-            string date = "20/01/2024 17:07";
-            List<Flavour> cupFlavourList= new List<Flavour>() { new Flavour("Vanilla", false, 1) , new Flavour("Chocolate", false, 1) };
-            List<Topping> cupToppingList = new List<Topping>() { new Topping("Sprinkles"), new Topping("Mochi") };
-            List<Flavour> coneFlavourList = new List<Flavour>() { new Flavour("Vanilla", false, 2), new Flavour("Sea salt", true, 1)};
-            List<Topping> coneToppingList = new List<Topping>() { new Topping("Oreos"), new Topping("Sago")};
+            string[] contents = File.ReadAllLines("orders.csv");
 
-            Customer testSubject = new Customer("Test Subject", 111111, new DateTime(1111,1,1));
-            testSubject.CurrentOrder = new Order(6, DateTime.ParseExact(date, format, null));
-            testSubject.CurrentOrder.AddIceCream(new Cup("Cup", 2, cupFlavourList, cupToppingList));
-            testSubject.CurrentOrder.AddIceCream(new Cone("Cone", 2, coneFlavourList, coneToppingList, true));
+            // index is which line of csv.
+            List<int> indexLine = new List<int>();
+            int indexx = 0;
+            foreach (string line in contents)
+            {
+                string[] parsedLine = line.Split(',');
+                if (parsedLine[3] != null && Convert.ToInt16(parsedLine[0]) == selectedCustomer.CurrentOrder.Id)
+                {
+                    indexLine.Add(indexx);
+                }
+                indexx++;
+            }
 
-            Customer selectedCustomer = testSubject;
+            ////Test case
+            //string format = "dd/MM/yyyy HH:mm";
+            //string date = "20/01/2024 17:07";
+            //List<Flavour> cupFlavourList= new List<Flavour>() { new Flavour("Vanilla", false, 1) , new Flavour("Chocolate", false, 1) };
+            //List<Topping> cupToppingList = new List<Topping>() { new Topping("Sprinkles"), new Topping("Mochi") };
+            //List<Flavour> coneFlavourList = new List<Flavour>() { new Flavour("Vanilla", false, 2), new Flavour("Sea salt", true, 1)};
+            //List<Topping> coneToppingList = new List<Topping>() { new Topping("Oreos"), new Topping("Sago")};
+
+            //Customer testSubject = new Customer("Test Subject", 111111, new DateTime(1111,1,1));
+            //testSubject.CurrentOrder = new Order(6, DateTime.ParseExact(date, format, null));
+            //testSubject.CurrentOrder.AddIceCream(new Cup("Cup", 2, cupFlavourList, cupToppingList));
+            //testSubject.CurrentOrder.AddIceCream(new Cone("Cone", 2, coneFlavourList, coneToppingList, true));
+
+            //Customer selectedCustomer = testSubject;
 
             // Listing of selected customer's order(s)
             Console.WriteLine($"{selectedCustomer.Name}'s orders:\n==================================================\n");
@@ -590,30 +625,56 @@ namespace Error404_PRG2_V2
             if (option == 1)
             {
                 IceCream selectedIceCream;
+                int index = 0;
                 if (counter > 1)
                 {
                     Console.WriteLine("\nWhich ice cream would you like to modify");
-                    int index = integerValidator("option", counter) - 1;
-                    selectedIceCream = selectedCustomer.CurrentOrder.IceCreamList[index];
+                    index = integerValidator("option", counter) - 1;
                 }
                 else
                 {
-                    selectedIceCream = selectedCustomer.CurrentOrder.IceCreamList[0];
+                    index = 0;
                 }
-                modifyIceCream(selectedIceCream);
+                selectedIceCream = selectedCustomer.CurrentOrder.IceCreamList[index];
+                IceCream modifiedIceCream = modifyIceCream(selectedIceCream);
+                selectedCustomer.CurrentOrder.IceCreamList[index] = modifiedIceCream;
+
+                contents[indexLine[index]] = csvLineFormatter(modifiedIceCream, selectedCustomer);
+                File.WriteAllLines("orders.csv", contents);
             }
             else if (option == 2)
             {
                 IceCream iceCream = makeIceCream();
                 selectedCustomer.CurrentOrder.AddIceCream(iceCream);
+                string finalAppendedLine = csvLineFormatter(iceCream, selectedCustomer);
+
+                string[] updatedContent = new string[contents.Length + 1];
+
+                // Copy the first line
+                Array.Copy(contents, updatedContent, indexLine.Last());
+
+                // Insert the new line at the second position
+                updatedContent[1] = finalAppendedLine;
+                
+                // Copy the remaining lines
+                Array.Copy(contents, indexLine.Last(), updatedContent, indexLine.Last() + 1, contents.Length - 1);
+                File.WriteAllLines("orders.csv", updatedContent);
+
                 Console.WriteLine("Ice Cream has been successfully added!");
             }
             else
             {
-                if (selectedCustomer.CurrentOrder.IceCreamList.Count != 1)
+                IceCream selectedIceCream;
+                int index = 0;
+                if (counter > 1)
                 {
-                    int deletedIceCreamOption = integerValidator("Ice Cream to delete", selectedCustomer.CurrentOrder.IceCreamList.Count);
-                    selectedCustomer.CurrentOrder.IceCreamList.RemoveAt(deletedIceCreamOption-1);
+                    Console.WriteLine("\nWhich ice cream would you like to delete");
+                    index = integerValidator("option", counter) - 1;
+                    selectedCustomer.CurrentOrder.IceCreamList.RemoveAt(index-1);
+
+                    List<string> existingLines = contents.ToList();
+                    existingLines.RemoveAt(indexLine[index]);
+                    File.WriteAllLines("orders.csv", existingLines);
                     Console.WriteLine("Ice Cream has been successfully deleted!");
                 }
                 else
@@ -769,7 +830,8 @@ namespace Error404_PRG2_V2
             int counter = 0;
             foreach (double total in monthlyTotalList)
             {
-                Console.WriteLine($"{months[counter]} {inputtedYear}:  ${total}");
+                Console.WriteLine($"{months[counter]} {inputtedYear}:  ${total.ToString("0.00")}");
+                counter++;
             }
             Console.WriteLine($"\nTotal:        {grandTotal}");
         }
@@ -1178,6 +1240,63 @@ namespace Error404_PRG2_V2
             else
             {
                 return icecream = makeWaffle(scoops, userFlavourList, userToppingList);
+            }
+        }
+
+        static string csvLineFormatter(IceCream item, Customer selectedCustomer)
+        {
+            string flavourString = "";
+            string toppingString = "";
+            int counter = 0;
+
+            // Prepare flavour string
+            foreach (Flavour flavour in item.Flavours)
+            {
+                for (int f = 0; f < flavour.Quantity; f++)
+                {
+                    flavourString += Convert.ToString(flavour.Type) + $",";
+                    counter++;
+                }
+            }
+            for (int i = 0; i < 3 - counter; i++)
+            {
+                flavourString += ",";
+            }
+            Console.WriteLine(flavourString);
+
+            // Prepare topping string 
+            counter = 1;
+            foreach (Topping topping in item.Toppings)
+            {
+                toppingString += Convert.ToString(topping.Type) + $",";
+                counter++;
+            }
+            for (int i = 0; i < 4 - counter; i++)
+            {
+                toppingString += ",";
+            }
+            Console.WriteLine(toppingString);
+            Console.WriteLine(selectedCustomer.CurrentOrder.TimeFulfilled);
+
+            string finalAppendLine = "";
+            string appendLineFormat = $"{selectedCustomer.CurrentOrder.Id},{selectedCustomer.MemberID},{selectedCustomer.CurrentOrder.TimeReceived}," +
+                $"{selectedCustomer.CurrentOrder.TimeFulfilled},{item.Option},{item.Scoops},";
+
+            if (item is Cone coneItem)
+            {
+                return finalAppendLine += appendLineFormat += $"{Convert.ToString(coneItem.Dipped).ToUpper()},,{flavourString},{toppingString}";
+            }
+            else if (item is Cup cupItem)
+            {
+                return finalAppendLine += appendLineFormat += $",,{flavourString},{toppingString}";
+            }
+            else if (item is Waffle waffleItem)
+            {
+                return finalAppendLine += appendLineFormat += $",{waffleItem.WaffleFlavour},{flavourString},{toppingString}";
+            }
+            else
+            {
+                return "";
             }
         }
     }

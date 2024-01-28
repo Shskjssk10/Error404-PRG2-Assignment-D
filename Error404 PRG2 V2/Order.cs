@@ -47,7 +47,7 @@ namespace Error404_PRG2_V2
 
         public void ModifyIceCream(int n)
         {
-            //add to list need to n-1 cos indexing 
+            //Ms Charis say don't need.
         }
 
         public void AddIceCream(IceCream iceCream)
