@@ -691,6 +691,8 @@ namespace Error404_PRG2_V2
             Queue<Customer> goldQueue = new Queue<Customer>();
             Queue<Customer> regularQueue = new Queue<Customer>();
 
+            string[] contents = File.ReadAllLines("orders.csv");
+
             List<Customer> filteredCustomerList = new List<Customer>();
 
             // Filter customers with current orders 
@@ -713,69 +715,88 @@ namespace Error404_PRG2_V2
                     regularQueue.Enqueue(customer);
                 }
             }
-            
+
+            Customer dequeuedCustomer = null;
             if (goldQueue.Count > 0)
             {
-                Customer customer = goldQueue.Dequeue();
-                Console.WriteLine("============= DEQUEUED ORDER =============");
-                IceCream mostExpensiveIceCream = null;
-                double mostCost = 0;
-                double totalCost = 0;
-
-                string[] contents = File.ReadAllLines("orders.csv");
-
-                List<IceCream> iceCreamOrders = customer.CurrentOrder.IceCreamList;
-
-                foreach (IceCream iceCream in iceCreamOrders)
-                {
-                    Console.WriteLine(iceCream.ToString() + $"Cost: {iceCream.CalculatePrice()}");
-                    if (iceCream.CalculatePrice() > mostCost)
-                    {
-                        mostCost = iceCream.CalculatePrice();
-                        mostExpensiveIceCream = iceCream;
-                    }
-                    totalCost += iceCream.CalculatePrice();
-                }
-
-                Console.WriteLine(customer.Rewards.ToString());
-                if (customer.Dob == DateTime.Today)
-                {
-                    totalCost -= mostExpensiveIceCream.CalculatePrice();
-                }
-
-                if (customer.Rewards.PunchCard == 10)
-                {
-                    if (iceCreamOrders[0] != mostExpensiveIceCream)
-                    {
-                        totalCost -= iceCreamOrders[0].CalculatePrice();
-                    }
-                }
-
-                if (customer.Rewards.Tier != "Ordinary")
-                {
-                    Console.WriteLine($"You have {customer.Rewards.Points} points. How many would you like to use?");
-                    int pointsUsed = integerValidator("number of points", customer.Rewards.Points);
-                    double costOffset = pointsUsed * 0.02;
-                    totalCost -= costOffset;
-                }
-
-                Console.WriteLine($"Final Cost: {totalCost}");
-
-                Console.Write("Press any key to proceed");
-                Console.ReadLine();
-
-                customer.Rewards.Punch();
-
-                // Need to do Math.Floor()
-                customer.Rewards.AddPoints(Convert.ToInt32((totalCost * 0.72, 0, MidpointRounding.AwayFromZero)));
-
-                string format = "dd/MM/yyyy HH:mm";
-                string dateFulfilled = Convert.ToString(DateTime.Now);
-                customer.CurrentOrder.TimeFulfilled = DateTime.ParseExact(dateFulfilled, format, null);
-
-                customer.OrderHistory.Add(customer.CurrentOrder);
-                customer.CurrentOrder = null;
+                dequeuedCustomer = goldQueue.Dequeue();
             }
+            else
+            {
+                dequeuedCustomer = regularQueue.Dequeue();
+            }
+
+            int index = 0;
+            foreach (string line in contents)
+            {
+                string[] parsedLine = line.Split(',');
+                if (parsedLine[3] != null && Convert.ToInt16(parsedLine[0]) == dequeuedCustomer.CurrentOrder.Id)
+                {
+                    break;
+                }
+                index++;
+            }
+
+            Console.WriteLine("============= DEQUEUED ORDER =============");
+            IceCream mostExpensiveIceCream = null;
+            double mostCost = 0;
+            double totalCost = 0;
+
+            List<IceCream> iceCreamOrders = dequeuedCustomer.CurrentOrder.IceCreamList;
+
+            foreach (IceCream iceCream in iceCreamOrders)
+            {
+                Console.WriteLine(iceCream.ToString() + $"Cost: {iceCream.CalculatePrice()}");
+                if (iceCream.CalculatePrice() > mostCost)
+                {
+                    mostCost = iceCream.CalculatePrice();
+                    mostExpensiveIceCream = iceCream;
+                }
+                totalCost += iceCream.CalculatePrice();
+            }
+
+            Console.WriteLine(dequeuedCustomer.Rewards.ToString());
+            if (dequeuedCustomer.Dob == DateTime.Today)
+            {
+                totalCost -= mostExpensiveIceCream.CalculatePrice();
+            }
+
+            if (dequeuedCustomer.Rewards.PunchCard == 10)
+            {
+                if (iceCreamOrders[0] != mostExpensiveIceCream)
+                {
+                    totalCost -= iceCreamOrders[0].CalculatePrice();
+                }
+            }
+
+            if (dequeuedCustomer.Rewards.Tier != "Ordinary")
+            {
+                Console.WriteLine($"You have {dequeuedCustomer.Rewards.Points} points. How many would you like to use?");
+                int pointsUsed = integerValidator("number of points", dequeuedCustomer.Rewards.Points);
+                double costOffset = pointsUsed * 0.02;
+                totalCost -= costOffset;
+            }
+
+            Console.WriteLine($"Final Cost: {totalCost}");
+
+            Console.Write("Press any key to proceed");
+            Console.ReadLine();
+
+            dequeuedCustomer.Rewards.Punch();
+
+            // Need to do Math.Floor()
+            dequeuedCustomer.Rewards.AddPoints(Convert.ToInt32((totalCost * 0.72, 0, MidpointRounding.AwayFromZero)));
+
+            string format = "dd/MM/yyyy HH:mm";
+            string dateFulfilled = Convert.ToString(DateTime.Now);
+            dequeuedCustomer.CurrentOrder.TimeFulfilled = DateTime.ParseExact(dateFulfilled, format, null);
+
+            List<string> existingLines = contents.ToList();
+            existingLines.RemoveAt(index);
+            File.WriteAllLines("orders.csv", existingLines);
+
+            dequeuedCustomer.OrderHistory.Add(dequeuedCustomer.CurrentOrder);
+            dequeuedCustomer.CurrentOrder = null;
         }
 
         // Incomplete
