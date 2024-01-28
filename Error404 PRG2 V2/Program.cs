@@ -182,7 +182,14 @@ namespace Error404_PRG2_V2
                     if (tempOrderList.Keys.Contains(Convert.ToInt32(selectedLine[0])) == false)
                     {
                         Order order1 = new Order(Convert.ToInt32(selectedLine[0]), DateTime.ParseExact(selectedLine[2], format, null));
-                        order1.TimeFulfilled = DateTime.ParseExact(selectedLine[3], format, null);
+                        try
+                        {
+                            order1.TimeFulfilled = DateTime.ParseExact(selectedLine[3], format, null);
+                        }
+                        catch (Exception e)
+                        {
+                            order1.TimeFulfilled = null;
+                        }
                         tempOrderList.Add(Convert.ToInt32(selectedLine[0]), order1);
 
                     }
@@ -256,13 +263,13 @@ namespace Error404_PRG2_V2
                         }
                         else
                         {
-                            if (selectedLine[7] != null)
+                            if (selectedLine[7] != "Original")
                             {
                                 order.Value.AddIceCream(new Waffle(selectedLine[4], scoops, flavourList, toppingList, selectedLine[7]));
                             }
                             else
                             {
-                                order.Value.AddIceCream(new Waffle(selectedLine[4], scoops, flavourList, toppingList, null));
+                                order.Value.AddIceCream(new Waffle(selectedLine[4], scoops, flavourList, toppingList, "Original"));
                             }
                         }
                     }
@@ -278,7 +285,14 @@ namespace Error404_PRG2_V2
                 {
                     if (order.Id == pair.Key)
                     {
-                        customerDict[pair.Value].OrderHistory.Add(order);
+                        if (order.TimeFulfilled != null)
+                        {
+                            customerDict[pair.Value].OrderHistory.Add(order);
+                        }
+                        else
+                        {
+                            customerDict[pair.Value].CurrentOrder = order;
+                        }
                     }
                 }
             }
