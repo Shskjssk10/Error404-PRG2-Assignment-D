@@ -722,6 +722,8 @@ namespace Error404_PRG2_V2
                 double mostCost = 0;
                 double totalCost = 0;
 
+                string[] contents = File.ReadAllLines("orders.csv");
+
                 List<IceCream> iceCreamOrders = customer.CurrentOrder.IceCreamList;
 
                 foreach (IceCream iceCream in iceCreamOrders)
