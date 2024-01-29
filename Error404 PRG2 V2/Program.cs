@@ -11,6 +11,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 using System.Xml.Linq;
 
 namespace Error404_PRG2_V2
@@ -182,7 +183,7 @@ namespace Error404_PRG2_V2
                 {
                     if (tempOrderList.Keys.Contains(Convert.ToInt32(selectedLine[0])) == false)
                     {
-                        Console.WriteLine(selectedLine[2]);
+                        //Console.WriteLine(selectedLine[2]);
                         Order order1 = new Order(Convert.ToInt32(selectedLine[0]), DateTime.Parse(selectedLine[2]));
                         try
                         {
@@ -382,8 +383,27 @@ namespace Error404_PRG2_V2
         // Option3 Customer is not appended to customer.csv 
         static void Option3(Dictionary<int, Customer> customerDict)
         {
-            Console.Write("Enter customer name: ");
-            var name = Console.ReadLine().Trim();
+            var name = "";
+            while (true)
+            {
+                Console.Write("Enter customer name: ");
+                name = Console.ReadLine().Trim();
+                bool isString = true;
+                foreach (char character in name)
+                {
+                    if (!char.IsLetter(character))
+                    {
+                        Console.WriteLine("Please ensure that name entered only consists of alphabets!");
+                        isString = false;
+                        break;
+                    }
+                }
+
+                if (isString)
+                {
+                    break;
+                }
+            }
 
             int id = 0;
 
@@ -470,94 +490,69 @@ namespace Error404_PRG2_V2
         {
             Customer selectedCustomer = selectCustomer(customerDict);
 
-            string[] contents = File.ReadAllLines("orders.csv");
-
-            // Parse the formatted string back to DateTime
-            DateTime formattedDateAndTime = DateTime.ParseExact(DateTime.Today.ToString("dd/MM/yyyy HH:mm"), "dd/MM/yyyy HH:mm", null);
-
-            // Checks last orderID of orders.csv and gives new ID of +1
-            selectedCustomer.CurrentOrder = new Order(Convert.ToInt16(contents.Last().Split(',').First()) + 1, formattedDateAndTime);
-
-            IceCream iceCream = makeIceCream();
-            selectedCustomer.CurrentOrder.AddIceCream(iceCream);
-            Console.WriteLine($"Ice Cream has been succesfully added to {selectedCustomer.Name} current order!");
-
-            string option;
-            while (true)
+            if (selectedCustomer.CurrentOrder == null)
             {
-                Console.Write("Would you like to add another ice cream [y/n]: ");
-                option = Console.ReadLine();
-                if (option == "y")
-                {
-                    IceCream newIceCream = makeIceCream();
-                    selectedCustomer.CurrentOrder.AddIceCream(newIceCream);
-                    Console.WriteLine($"Ice Cream has been succesfully added to {selectedCustomer.Name} current order!");
-                }
-                else if (option == "n")
-                {
-                    Console.WriteLine("Order has been succesfully created!");
+                string[] contents = File.ReadAllLines("orders.csv");
 
-                    // Preparing data to append to orders.csv
+                // Parse the formatted string back to DateTime
+                DateTime formattedDateAndTime = DateTime.ParseExact(DateTime.Today.ToString("dd/MM/yyyy HH:mm"),
+                    "dd/MM/yyyy HH:mm", null);
 
-                    foreach(IceCream item in selectedCustomer.CurrentOrder.IceCreamList)
+                // Checks last orderID of orders.csv and gives new ID of +1
+                selectedCustomer.CurrentOrder = new Order(Convert.ToInt16(contents.Last().Split(',').First()) + 1,
+                    formattedDateAndTime);
+
+                IceCream iceCream = makeIceCream();
+                selectedCustomer.CurrentOrder.AddIceCream(iceCream);
+                Console.WriteLine($"Ice Cream has been succesfully added to {selectedCustomer.Name} current order!");
+
+                string option;
+                while (true)
+                {
+                    Console.Write("Would you like to add another ice cream [y/n]: ");
+                    option = Console.ReadLine();
+                    if (option == "y")
                     {
-                        string finalAppendLine = csvLineFormatter(item, selectedCustomer);
-
-                        using (StreamWriter sw = new StreamWriter("orders.csv", true))
-                        {
-                            sw.WriteLine(finalAppendLine);
-                        }
+                        IceCream newIceCream = makeIceCream();
+                        selectedCustomer.CurrentOrder.AddIceCream(newIceCream);
+                        Console.WriteLine(
+                            $"Ice Cream has been succesfully added to {selectedCustomer.Name} current order!");
                     }
-                    break;
-                }
-                else
-                {
-                    Console.WriteLine("Invalid input. Please enter 'y' or 'n'.");
+                    else if (option == "n")
+                    {
+                        Console.WriteLine("Order has been succesfully created!");
+
+                        // Preparing data to append to orders.csv
+
+                        foreach (IceCream item in selectedCustomer.CurrentOrder.IceCreamList)
+                        {
+                            string finalAppendLine = csvLineFormatter(item, selectedCustomer);
+
+                            using (StreamWriter sw = new StreamWriter("orders.csv", true))
+                            {
+                                sw.WriteLine(finalAppendLine);
+                            }
+                        }
+
+                        break;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Invalid input. Please enter 'y' or 'n'.");
+                    }
                 }
             }
-
+            else
+            {
+                Console.WriteLine($"{selectedCustomer.Name} already have a current order.");
+            }
         }
 
         // Completed 
         static void Option5(Dictionary<int, Customer> customerDict)
         {
-            Console.WriteLine("List of customers\n========================================");
-            int counter = 1;
-            foreach (Customer customer in customerDict.Values)
-            {
-                Console.WriteLine($"[{counter}] {customer.Name}");
-                counter++;
-            }
-
-            // Initialises list
-            List<string> allCustomerNames = new List<string>();
-            foreach (Customer customer in customerDict.Values)
-            {
-                allCustomerNames.Add(customer.Name);
-            }
-
-            //Validates that customer name entered is under the list
-            Customer selectedCustomer = null;
-            while (true)
-            {
-                Console.Write("Please enter customer: ");
-                string customerName = Console.ReadLine();
-                if (allCustomerNames.Contains(customerName) == false)
-                {
-                    Console.WriteLine("Please enter a name that is in the list\n");
-                }
-                else
-                {
-                    foreach (Customer customer in customerDict.Values)
-                    {
-                        if (customer.Name == customerName)
-                        {
-                            selectedCustomer = customer;
-                        }
-                    }
-                    break;
-                }
-            }
+            int counter = 0;
+            Customer selectedCustomer = selectCustomer(customerDict);
 
             // Returns current order
             Console.WriteLine("\nCurrent order\n===================================");
@@ -614,22 +609,6 @@ namespace Error404_PRG2_V2
                 indexx++;
             }
 
-            ////Test case
-            //string format = "dd/MM/yyyy HH:mm";
-            //string date = "20/01/2024 17:07";
-            //List<Flavour> cupFlavourList= new List<Flavour>() { new Flavour("Vanilla", false, 1) , new Flavour("Chocolate", false, 1) };
-            //List<Topping> cupToppingList = new List<Topping>() { new Topping("Sprinkles"), new Topping("Mochi") };
-            //List<Flavour> coneFlavourList = new List<Flavour>() { new Flavour("Vanilla", false, 2), new Flavour("Sea salt", true, 1)};
-            //List<Topping> coneToppingList = new List<Topping>() { new Topping("Oreos"), new Topping("Sago")};
-
-            //Customer testSubject = new Customer("Test Subject", 111111, new DateTime(1111,1,1));
-            //testSubject.CurrentOrder = new Order(6, DateTime.ParseExact(date, format, null));
-            //testSubject.CurrentOrder.AddIceCream(new Cup("Cup", 2, cupFlavourList, cupToppingList));
-            //testSubject.CurrentOrder.AddIceCream(new Cone("Cone", 2, coneFlavourList, coneToppingList, true));
-
-            //Customer selectedCustomer = testSubject;
-
-            // Listing of selected customer's order(s)
             Console.WriteLine($"{selectedCustomer.Name}'s orders:\n==================================================\n");
             int counter = 0;
             if (selectedCustomer.CurrentOrder == null)
@@ -666,6 +645,13 @@ namespace Error404_PRG2_V2
                     selectedCustomer.CurrentOrder.IceCreamList[index] = modifiedIceCream;
 
                     contents[indexLine[index]] = csvLineFormatter(modifiedIceCream, selectedCustomer);
+
+                    // To delete
+                    foreach (var line in contents)
+                    {
+                        Console.WriteLine(line);
+                    }
+
                     File.WriteAllLines("orders.csv", contents);
                 }
                 else if (option == 2)
@@ -674,19 +660,19 @@ namespace Error404_PRG2_V2
                     selectedCustomer.CurrentOrder.AddIceCream(iceCream);
                     string finalAppendedLine = csvLineFormatter(iceCream, selectedCustomer);
 
-                    List<string> updatedContent = contents.ToList();
+                    List<string> updatedContent = new List<string>();
+                    updatedContent = contents.ToList();
                     updatedContent.Add(finalAppendedLine);
-                    File.WriteAllLines("orders.csv", updatedContent);
+
+                    // To delete
+                    foreach (var line in updatedContent)
+                    {
+                        Console.WriteLine(line);
+                    }
+                    File.Append("orders.csv", updatedContent);
 
 
-                    //// Copy the first line
-                    //Array.Copy(contents, updatedContent, indexLine.Last());
-
-                    //// Insert the new line at the second position
-                    //updatedContent[1] = finalAppendedLine;
                     
-                    //// Copy the remaining lines
-                    //Array.Copy(contents, indexLine.Last(), updatedContent, indexLine.Last() + 1, contents.Length - 1);
 
                     Console.WriteLine("Ice Cream has been successfully added!");
                 }
@@ -702,6 +688,13 @@ namespace Error404_PRG2_V2
 
                         List<string> existingLines = contents.ToList();
                         existingLines.RemoveAt(indexLine[index]);
+
+                        // To delete
+                        foreach (var line in existingLines)
+                        {
+                            Console.WriteLine(line);
+                        }
+
                         File.WriteAllLines("orders.csv", existingLines);
                         Console.WriteLine("Ice Cream has been successfully deleted!");
                     }
