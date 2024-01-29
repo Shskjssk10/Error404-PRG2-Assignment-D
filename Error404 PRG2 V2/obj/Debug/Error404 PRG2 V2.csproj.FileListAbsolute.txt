@@ -16,3 +16,12 @@ C:\Users\Caden\Documents\Desktop Personal\Programming-Related\C#\PRG Assignment 
 C:\Users\Caden\Documents\Desktop Personal\Programming-Related\C#\PRG Assignment Version folders\Error404 PRG2 V3\Error404 PRG2 V2\bin\Debug\Error404 PRG2 V2.exe.config
 C:\Users\Caden\Documents\Desktop Personal\Programming-Related\C#\PRG Assignment Version folders\Error404 PRG2 V3\Error404 PRG2 V2\bin\Debug\Error404 PRG2 V2.exe
 C:\Users\Caden\Documents\Desktop Personal\Programming-Related\C#\PRG Assignment Version folders\Error404 PRG2 V3\Error404 PRG2 V2\bin\Debug\Error404 PRG2 V2.pdb
+D:\AY23 Y1S2\PRG II\clone\Error404 PRG2 V2\bin\Debug\customers.csv
+D:\AY23 Y1S2\PRG II\clone\Error404 PRG2 V2\bin\Debug\orders.csv
+D:\AY23 Y1S2\PRG II\clone\Error404 PRG2 V2\bin\Debug\Error404 PRG2 V2.exe.config
+D:\AY23 Y1S2\PRG II\clone\Error404 PRG2 V2\bin\Debug\Error404 PRG2 V2.exe
+D:\AY23 Y1S2\PRG II\clone\Error404 PRG2 V2\bin\Debug\Error404 PRG2 V2.pdb
+D:\AY23 Y1S2\PRG II\clone\Error404 PRG2 V2\obj\Debug\Error404 PRG2 V2.csproj.AssemblyReference.cache
+D:\AY23 Y1S2\PRG II\clone\Error404 PRG2 V2\obj\Debug\Error404 PRG2 V2.csproj.CoreCompileInputs.cache
+D:\AY23 Y1S2\PRG II\clone\Error404 PRG2 V2\obj\Debug\Error404 PRG2 V2.exe
+D:\AY23 Y1S2\PRG II\clone\Error404 PRG2 V2\obj\Debug\Error404 PRG2 V2.pdb

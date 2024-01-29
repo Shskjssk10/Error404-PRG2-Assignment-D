@@ -72,7 +72,7 @@ namespace Error404_PRG2_V2
                 $"Scoops: {Scoops}\n" +
                 $"Flavours: \n{flavourList}" +
                 $"Toppings:\n{toppingList}" +
-                $"Dipped: {Dipped}";
+                $"\nDipped: {Dipped}";
         }
     }
 }

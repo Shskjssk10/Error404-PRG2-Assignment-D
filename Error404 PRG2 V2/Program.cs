@@ -173,8 +173,8 @@ namespace Error404_PRG2_V2
                 // Adds first order as there are no orders in dictionary
                 if (tempOrderList.Count == 0)
                 {
-                    Order order = new Order(Convert.ToInt32(selectedLine[0]), DateTime.ParseExact(selectedLine[2], format, null));
-                    order.TimeFulfilled = DateTime.ParseExact(selectedLine[3], format, null);
+                    Order order = new Order(Convert.ToInt32(selectedLine[0]), DateTime.Parse(selectedLine[2]));
+                    order.TimeFulfilled = DateTime.Parse(selectedLine[3]);
                     tempOrderList.Add(Convert.ToInt32(selectedLine[0]), order) ;
                 }
                 // Checks for duplicates after first order is added
@@ -182,10 +182,11 @@ namespace Error404_PRG2_V2
                 {
                     if (tempOrderList.Keys.Contains(Convert.ToInt32(selectedLine[0])) == false)
                     {
-                        Order order1 = new Order(Convert.ToInt32(selectedLine[0]), DateTime.ParseExact(selectedLine[2], format, null));
+                        Console.WriteLine(selectedLine[2]);
+                        Order order1 = new Order(Convert.ToInt32(selectedLine[0]), DateTime.Parse(selectedLine[2]));
                         try
                         {
-                            order1.TimeFulfilled = DateTime.ParseExact(selectedLine[3], format, null);
+                            order1.TimeFulfilled = DateTime.Parse(selectedLine[3]);
                         }
                         catch (Exception e)
                         {
@@ -332,26 +333,49 @@ namespace Error404_PRG2_V2
 
             foreach (Customer customer in filteredCustomerList)
             {
-                if (customer.Rewards.Tier == "Gold")
+                if (customer.Rewards.Tier == "Gold" && customer.CurrentOrder != null)
                 {
                     goldQueue.Enqueue(customer);
                 }
-                else
+                else if (customer.CurrentOrder != null)
                 {
                     regularQueue.Enqueue(customer);
+                    Console.WriteLine("Enqueued!");
                 }
             }
 
-            Console.WriteLine("================= GOLD QUEUE =================");
-            foreach (Customer customer in goldQueue)
+            Console.WriteLine("================= GOLD QUEUE =================\n");
+            if (goldQueue.Count == 0)
             {
-                Console.WriteLine(customer.CurrentOrder.ToString());
+                Console.WriteLine("(There are no current orders)\n");
+            }
+            else
+            {
+                foreach (Customer customer in goldQueue)
+                {
+                    Console.WriteLine(customer.CurrentOrder.ToString());
+                    foreach (IceCream iceCream in customer.CurrentOrder.IceCreamList)
+                    {
+                        Console.WriteLine(iceCream.ToString());
+                    }
+                }
             }
 
-            Console.WriteLine("=============== REGULAR QUEUE ===============");
-            foreach (Customer customer in regularQueue)
+            Console.WriteLine("=============== REGULAR QUEUE ===============\n");
+            if (regularQueue.Count == 0)
             {
-                Console.WriteLine(customer.CurrentOrder.ToString());
+                Console.WriteLine("(There are no current orders)");
+            }
+            else
+            {
+                foreach (Customer customer in regularQueue)
+                {
+                    Console.WriteLine(customer.CurrentOrder.ToString());
+                    foreach (IceCream iceCream in customer.CurrentOrder.IceCreamList)
+                    {
+                        Console.WriteLine(iceCream.ToString());
+                    }
+                }
             }
         }
 
@@ -430,7 +454,7 @@ namespace Error404_PRG2_V2
                 using (StreamWriter sw = new StreamWriter(customerFilePath, true))
                 {
                     sw.WriteLine($"{customer.Name},{customer.MemberID},{customer.Dob.ToShortDateString()}," +
-                        $"{customer.Rewards.Tier},{customer.Rewards.Points},{customer.Rewards.PunchCard}\n");
+                        $"{customer.Rewards.Tier},{customer.Rewards.Points},{customer.Rewards.PunchCard}");
                 }
                 Console.WriteLine("Customer successfully appended to customers.csv");
             }
@@ -456,6 +480,7 @@ namespace Error404_PRG2_V2
 
             IceCream iceCream = makeIceCream();
             selectedCustomer.CurrentOrder.AddIceCream(iceCream);
+            Console.WriteLine($"Ice Cream has been succesfully added to {selectedCustomer.Name} current order!");
 
             string option;
             while (true)
@@ -464,6 +489,8 @@ namespace Error404_PRG2_V2
                 option = Console.ReadLine();
                 if (option == "y")
                 {
+                    IceCream newIceCream = makeIceCream();
+                    selectedCustomer.CurrentOrder.AddIceCream(newIceCream);
                     Console.WriteLine($"Ice Cream has been succesfully added to {selectedCustomer.Name} current order!");
                 }
                 else if (option == "n")
@@ -571,7 +598,7 @@ namespace Error404_PRG2_V2
             // Method that returns valid customer
             Customer selectedCustomer = selectCustomer(customerDict);
 
-            string[] contents = File.ReadAllLines("orders.csv");
+            string[] contents = File.ReadAllLines("orders.csv").Skip(1).ToArray();
 
             // index is which line of csv.
             List<int> indexLine = new List<int>();
@@ -579,7 +606,8 @@ namespace Error404_PRG2_V2
             foreach (string line in contents)
             {
                 string[] parsedLine = line.Split(',');
-                if (parsedLine[3] != null && Convert.ToInt16(parsedLine[0]) == selectedCustomer.CurrentOrder.Id)
+                Console.WriteLine(parsedLine[0]);
+                if (parsedLine[3] == "" && Convert.ToInt16(parsedLine[0]) == selectedCustomer.CurrentOrder.Id)
                 {
                     indexLine.Add(indexx);
                 }
@@ -615,73 +643,75 @@ namespace Error404_PRG2_V2
                     Console.WriteLine($"Ice Cream ({counter+1})\n==============" + iceCream.ToString()); 
                     counter++;
                 }
-            }
+                Console.WriteLine("\n==================== MODIFICATION ====================\n[1] Modify existing Ice Cream\n[2] Add an Ice Cream\n" +
+                    "[3] Delete existing Ice Cream\n");
+                int option = integerValidator("option", 3);
 
-            Console.WriteLine("\n==================== MODIFICATION ====================\n[1] Modify existing Ice Cream\n[2] Add an Ice Cream\n" +
-                "[3] Delete existing Ice Cream\n");
-            int option = integerValidator("option", 3);
-
-            // Option for modifying existing ice cream
-            if (option == 1)
-            {
-                IceCream selectedIceCream;
-                int index = 0;
-                if (counter > 1)
+                // Option for modifying existing ice cream
+                if (option == 1)
                 {
-                    Console.WriteLine("\nWhich ice cream would you like to modify");
-                    index = integerValidator("option", counter) - 1;
+                    IceCream selectedIceCream;
+                    int index = 0;
+                    if (counter > 1)
+                    {
+                        Console.WriteLine("\nWhich ice cream would you like to modify");
+                        index = integerValidator("option", counter) - 1;
+                    }
+                    else
+                    {
+                        index = 0;
+                    }
+                    selectedIceCream = selectedCustomer.CurrentOrder.IceCreamList[index];
+                    IceCream modifiedIceCream = modifyIceCream(selectedIceCream);
+                    selectedCustomer.CurrentOrder.IceCreamList[index] = modifiedIceCream;
+
+                    contents[indexLine[index]] = csvLineFormatter(modifiedIceCream, selectedCustomer);
+                    File.WriteAllLines("orders.csv", contents);
+                }
+                else if (option == 2)
+                {
+                    IceCream iceCream = makeIceCream();
+                    selectedCustomer.CurrentOrder.AddIceCream(iceCream);
+                    string finalAppendedLine = csvLineFormatter(iceCream, selectedCustomer);
+
+                    List<string> updatedContent = contents.ToList();
+                    updatedContent.Add(finalAppendedLine);
+                    File.WriteAllLines("orders.csv", updatedContent);
+
+
+                    //// Copy the first line
+                    //Array.Copy(contents, updatedContent, indexLine.Last());
+
+                    //// Insert the new line at the second position
+                    //updatedContent[1] = finalAppendedLine;
+                    
+                    //// Copy the remaining lines
+                    //Array.Copy(contents, indexLine.Last(), updatedContent, indexLine.Last() + 1, contents.Length - 1);
+
+                    Console.WriteLine("Ice Cream has been successfully added!");
                 }
                 else
                 {
-                    index = 0;
-                }
-                selectedIceCream = selectedCustomer.CurrentOrder.IceCreamList[index];
-                IceCream modifiedIceCream = modifyIceCream(selectedIceCream);
-                selectedCustomer.CurrentOrder.IceCreamList[index] = modifiedIceCream;
+                    IceCream selectedIceCream;
+                    int index = 0;
+                    if (counter > 1)
+                    {
+                        Console.WriteLine("\nWhich ice cream would you like to delete");
+                        index = integerValidator("option", counter) - 1;
+                        selectedCustomer.CurrentOrder.IceCreamList.RemoveAt(index);
 
-                contents[indexLine[index]] = csvLineFormatter(modifiedIceCream, selectedCustomer);
-                File.WriteAllLines("orders.csv", contents);
-            }
-            else if (option == 2)
-            {
-                IceCream iceCream = makeIceCream();
-                selectedCustomer.CurrentOrder.AddIceCream(iceCream);
-                string finalAppendedLine = csvLineFormatter(iceCream, selectedCustomer);
-
-                string[] updatedContent = new string[contents.Length + 1];
-
-                // Copy the first line
-                Array.Copy(contents, updatedContent, indexLine.Last());
-
-                // Insert the new line at the second position
-                updatedContent[1] = finalAppendedLine;
-                
-                // Copy the remaining lines
-                Array.Copy(contents, indexLine.Last(), updatedContent, indexLine.Last() + 1, contents.Length - 1);
-                File.WriteAllLines("orders.csv", updatedContent);
-
-                Console.WriteLine("Ice Cream has been successfully added!");
-            }
-            else
-            {
-                IceCream selectedIceCream;
-                int index = 0;
-                if (counter > 1)
-                {
-                    Console.WriteLine("\nWhich ice cream would you like to delete");
-                    index = integerValidator("option", counter) - 1;
-                    selectedCustomer.CurrentOrder.IceCreamList.RemoveAt(index-1);
-
-                    List<string> existingLines = contents.ToList();
-                    existingLines.RemoveAt(indexLine[index]);
-                    File.WriteAllLines("orders.csv", existingLines);
-                    Console.WriteLine("Ice Cream has been successfully deleted!");
-                }
-                else
-                {
-                    Console.WriteLine("Cannot remove ice cream. Orders may not have 0 orders.");
+                        List<string> existingLines = contents.ToList();
+                        existingLines.RemoveAt(indexLine[index]);
+                        File.WriteAllLines("orders.csv", existingLines);
+                        Console.WriteLine("Ice Cream has been successfully deleted!");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Cannot remove ice cream. Orders may not have 0 orders.");
+                    }
                 }
             }
+
             
         }
 
@@ -730,7 +760,7 @@ namespace Error404_PRG2_V2
             foreach (string line in contents)
             {
                 string[] parsedLine = line.Split(',');
-                if (parsedLine[3] != null && Convert.ToInt16(parsedLine[0]) == dequeuedCustomer.CurrentOrder.Id)
+                if (parsedLine[3] == "" && Convert.ToInt16(parsedLine[0]) == dequeuedCustomer.CurrentOrder.Id)
                 {
                     break;
                 }
@@ -746,7 +776,7 @@ namespace Error404_PRG2_V2
 
             foreach (IceCream iceCream in iceCreamOrders)
             {
-                Console.WriteLine(iceCream.ToString() + $"Cost: {iceCream.CalculatePrice()}");
+                Console.WriteLine(iceCream.ToString() + $"\n\nCost: ${iceCream.CalculatePrice().ToString("0.00")}");
                 if (iceCream.CalculatePrice() > mostCost)
                 {
                     mostCost = iceCream.CalculatePrice();
@@ -771,13 +801,13 @@ namespace Error404_PRG2_V2
 
             if (dequeuedCustomer.Rewards.Tier != "Ordinary")
             {
-                Console.WriteLine($"You have {dequeuedCustomer.Rewards.Points} points. How many would you like to use?");
+                Console.WriteLine($"\nYou have {dequeuedCustomer.Rewards.Points} points. How many would you like to use?");
                 int pointsUsed = integerValidator("number of points", dequeuedCustomer.Rewards.Points);
                 double costOffset = pointsUsed * 0.02;
                 totalCost -= costOffset;
             }
 
-            Console.WriteLine($"Final Cost: {totalCost}");
+            Console.WriteLine($"Final Cost: ${totalCost.ToString("0.00")}");
 
             Console.Write("Press any key to proceed");
             Console.ReadLine();
@@ -785,11 +815,11 @@ namespace Error404_PRG2_V2
             dequeuedCustomer.Rewards.Punch();
 
             // Need to do Math.Floor()
-            dequeuedCustomer.Rewards.AddPoints(Convert.ToInt32((totalCost * 0.72, 0, MidpointRounding.AwayFromZero)));
+            dequeuedCustomer.Rewards.AddPoints(Convert.ToInt32((int)Math.Ceiling(totalCost * 0.72)));
 
             string format = "dd/MM/yyyy HH:mm";
             string dateFulfilled = Convert.ToString(DateTime.Now);
-            dequeuedCustomer.CurrentOrder.TimeFulfilled = DateTime.ParseExact(dateFulfilled, format, null);
+            dequeuedCustomer.CurrentOrder.TimeFulfilled = DateTime.Parse(dateFulfilled);
 
             List<string> existingLines = contents.ToList();
             existingLines.RemoveAt(index);
@@ -856,7 +886,7 @@ namespace Error404_PRG2_V2
                 Console.WriteLine($"{months[counter]} {inputtedYear}:  ${total.ToString("0.00")}");
                 counter++;
             }
-            Console.WriteLine($"\nTotal:        {grandTotal}");
+            Console.WriteLine($"\nTotal:     ${grandTotal.ToString("0.00")}");
         }
         
         // Method that validates and returns customer
@@ -874,7 +904,7 @@ namespace Error404_PRG2_V2
             List<string> allCustomerNames = new List<string>();
             foreach (Customer customer in customerDict.Values)
             {
-                allCustomerNames.Add(customer.Name);
+                allCustomerNames.Add(customer.Name.ToLower());
             }
 
             //Validates that customer name entered is under the list
@@ -882,7 +912,7 @@ namespace Error404_PRG2_V2
             while (true)
             {
                 Console.Write("Please enter customer: ");
-                string option = Console.ReadLine();
+                string option = Console.ReadLine().Trim().ToLower();
                 if (allCustomerNames.Contains(option) == false)
                 {
                     Console.WriteLine("Please enter a name that is in the list\n");
@@ -891,7 +921,7 @@ namespace Error404_PRG2_V2
                 {
                     foreach (Customer customer in customerDict.Values)
                     {
-                        if (customer.Name == option)
+                        if (customer.Name == option.Substring(0, 1).ToUpper() + option.Substring(1))
                         {
                             selectedCustomer = customer;
                         }
@@ -1307,15 +1337,15 @@ namespace Error404_PRG2_V2
 
             if (item is Cone coneItem)
             {
-                return finalAppendLine += appendLineFormat += $"{Convert.ToString(coneItem.Dipped).ToUpper()},,{flavourString},{toppingString}";
+                return finalAppendLine += appendLineFormat += $"{Convert.ToString(coneItem.Dipped).ToUpper()},,{flavourString}{toppingString}";
             }
             else if (item is Cup cupItem)
             {
-                return finalAppendLine += appendLineFormat += $",,{flavourString},{toppingString}";
+                return finalAppendLine += appendLineFormat += $",,{flavourString}{toppingString}";
             }
             else if (item is Waffle waffleItem)
             {
-                return finalAppendLine += appendLineFormat += $",{waffleItem.WaffleFlavour},{flavourString},{toppingString}";
+                return finalAppendLine += appendLineFormat += $",{waffleItem.WaffleFlavour},{flavourString}{toppingString}";
             }
             else
             {
