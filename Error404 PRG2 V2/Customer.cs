@@ -41,7 +41,7 @@ namespace Error404_PRG2_V2
         }
         public List<Order> OrderHistory { get; set; } = new List<Order>();
 
-        public PointCard Rewards { get; set; }
+        public PointCard Rewards { get; set; } = new PointCard();
 
         public Customer()
         {

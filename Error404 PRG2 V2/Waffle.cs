@@ -29,7 +29,7 @@ namespace Error404_PRG2_V2
         public override double CalculatePrice()
         {
             double totalCost = 0;
-            List<double> scoopPrice = new List<double>() { 4.00, 5.50, 6.50 };
+            List<double> scoopPrice = new List<double>() { 7.00, 8.50, 9.50 };
             foreach (var flavour in Flavours)
             {
                 if (flavour.Premium == true)
@@ -72,7 +72,7 @@ namespace Error404_PRG2_V2
                 $"Scoops: {Scoops}\n" +
                 $"Flavours: \n{flavourList}" +
                 $"Toppings:\n{toppingList}" +
-                $"Waffle Flavour: {WaffleFlavour}";
+                $"\nWaffle Flavour: {WaffleFlavour}";
         }
     }
 }

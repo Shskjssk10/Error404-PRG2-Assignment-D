@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Diagnostics.SymbolStore;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Reflection;
@@ -465,7 +466,6 @@ namespace Error404_PRG2_V2
             }
 
             Customer customer = new Customer(name, id, dob);
-            //customer.Rewards.Tier = "Ordinary"; 
             customerDict.Add(id, customer);
 
             string customerFilePath = "customers.csv";
@@ -601,7 +601,7 @@ namespace Error404_PRG2_V2
             foreach (string line in contents)
             {
                 string[] parsedLine = line.Split(',');
-                Console.WriteLine(parsedLine[0]);
+                //Console.WriteLine(parsedLine[0]);
                 if (parsedLine[3] == "" && Convert.ToInt16(parsedLine[0]) == selectedCustomer.CurrentOrder.Id)
                 {
                     indexLine.Add(indexx);
@@ -644,15 +644,27 @@ namespace Error404_PRG2_V2
                     IceCream modifiedIceCream = modifyIceCream(selectedIceCream);
                     selectedCustomer.CurrentOrder.IceCreamList[index] = modifiedIceCream;
 
-                    contents[indexLine[index]] = csvLineFormatter(modifiedIceCream, selectedCustomer);
-
-                    // To delete
-                    foreach (var line in contents)
+                    List<string> updatedContents = new List<string>();
+                    using (StreamReader sr = new StreamReader("orders.csv"))
                     {
-                        Console.WriteLine(line);
+                        for (int i = 0; i < contents.Length; i++)
+                        {
+                            string line = sr.ReadLine();
+                            if (i == indexLine[index])
+                            {
+                                updatedContents.Add(csvLineFormatter(modifiedIceCream, selectedCustomer));
+                            }
+                            else
+                            {
+                                updatedContents.Add(line);
+                            }
+                        }
                     }
 
-                    File.WriteAllLines("orders.csv", contents);
+                    //foreach (var updatedContent in updatedContents)
+                    //{
+                    //    Console.WriteLine(updatedContent);
+                    //}
                 }
                 else if (option == 2)
                 {
@@ -669,7 +681,7 @@ namespace Error404_PRG2_V2
                     {
                         Console.WriteLine(line);
                     }
-                    File.Append("orders.csv", updatedContent);
+                    //File.Append("orders.csv", updatedContent);
 
 
                     
@@ -711,115 +723,122 @@ namespace Error404_PRG2_V2
         //Incomplete
         static void Option7(Dictionary<int, Customer> customerDict)
         {
-            Queue<Customer> goldQueue = new Queue<Customer>();
-            Queue<Customer> regularQueue = new Queue<Customer>();
-
-            string[] contents = File.ReadAllLines("orders.csv");
-
-            List<Customer> filteredCustomerList = new List<Customer>();
-
-            // Filter customers with current orders 
-            foreach (Customer customer in customerDict.Values)
+            try
             {
-                if (customer.CurrentOrder != null)
+                Queue<Customer> goldQueue = new Queue<Customer>();
+                Queue<Customer> regularQueue = new Queue<Customer>();
+
+                string[] contents = File.ReadAllLines("orders.csv");
+
+                List<Customer> filteredCustomerList = new List<Customer>();
+
+                // Filter customers with current orders 
+                foreach (Customer customer in customerDict.Values)
                 {
-                    filteredCustomerList.Add(customer);
+                    if (customer.CurrentOrder != null)
+                    {
+                        filteredCustomerList.Add(customer);
+                    }
                 }
-            }
 
-            foreach (Customer customer in filteredCustomerList)
-            {
-                if (customer.Rewards.Tier == "Gold")
+                foreach (Customer customer in filteredCustomerList)
                 {
-                    goldQueue.Enqueue(customer);
+                    if (customer.Rewards.Tier == "Gold")
+                    {
+                        goldQueue.Enqueue(customer);
+                    }
+                    else
+                    {
+                        regularQueue.Enqueue(customer);
+                    }
+                }
+
+                Customer dequeuedCustomer = null;
+                if (goldQueue.Count > 0)
+                {
+                    dequeuedCustomer = goldQueue.Dequeue();
                 }
                 else
                 {
-                    regularQueue.Enqueue(customer);
+                    dequeuedCustomer = regularQueue.Dequeue();
                 }
-            }
 
-            Customer dequeuedCustomer = null;
-            if (goldQueue.Count > 0)
-            {
-                dequeuedCustomer = goldQueue.Dequeue();
-            }
-            else
-            {
-                dequeuedCustomer = regularQueue.Dequeue();
-            }
-
-            int index = 0;
-            foreach (string line in contents)
-            {
-                string[] parsedLine = line.Split(',');
-                if (parsedLine[3] == "" && Convert.ToInt16(parsedLine[0]) == dequeuedCustomer.CurrentOrder.Id)
+                int index = 0;
+                foreach (string line in contents)
                 {
-                    break;
+                    string[] parsedLine = line.Split(',');
+                    if (parsedLine[3] == "" && Convert.ToInt16(parsedLine[0]) == dequeuedCustomer.CurrentOrder.Id)
+                    {
+                        break;
+                    }
+                    index++;
                 }
-                index++;
-            }
 
-            Console.WriteLine("============= DEQUEUED ORDER =============");
-            IceCream mostExpensiveIceCream = null;
-            double mostCost = 0;
-            double totalCost = 0;
+                Console.WriteLine("============= DEQUEUED ORDER =============");
+                IceCream mostExpensiveIceCream = null;
+                double mostCost = 0;
+                double totalCost = 0;
 
-            List<IceCream> iceCreamOrders = dequeuedCustomer.CurrentOrder.IceCreamList;
+                List<IceCream> iceCreamOrders = dequeuedCustomer.CurrentOrder.IceCreamList;
 
-            foreach (IceCream iceCream in iceCreamOrders)
-            {
-                Console.WriteLine(iceCream.ToString() + $"\n\nCost: ${iceCream.CalculatePrice().ToString("0.00")}");
-                if (iceCream.CalculatePrice() > mostCost)
+                foreach (IceCream iceCream in iceCreamOrders)
                 {
-                    mostCost = iceCream.CalculatePrice();
-                    mostExpensiveIceCream = iceCream;
+                    Console.WriteLine(iceCream.ToString() + $"\n\nCost: ${iceCream.CalculatePrice().ToString("0.00")}");
+                    if (iceCream.CalculatePrice() > mostCost)
+                    {
+                        mostCost = iceCream.CalculatePrice();
+                        mostExpensiveIceCream = iceCream;
+                    }
+                    totalCost += iceCream.CalculatePrice();
                 }
-                totalCost += iceCream.CalculatePrice();
-            }
 
-            Console.WriteLine(dequeuedCustomer.Rewards.ToString());
-            if (dequeuedCustomer.Dob == DateTime.Today)
-            {
-                totalCost -= mostExpensiveIceCream.CalculatePrice();
-            }
-
-            if (dequeuedCustomer.Rewards.PunchCard == 10)
-            {
-                if (iceCreamOrders[0] != mostExpensiveIceCream)
+                Console.WriteLine(dequeuedCustomer.Rewards.ToString());
+                if (dequeuedCustomer.Dob == DateTime.Today)
                 {
-                    totalCost -= iceCreamOrders[0].CalculatePrice();
+                    totalCost -= mostExpensiveIceCream.CalculatePrice();
                 }
-            }
 
-            if (dequeuedCustomer.Rewards.Tier != "Ordinary")
+                if (dequeuedCustomer.Rewards.PunchCard == 10)
+                {
+                    if (iceCreamOrders[0] != mostExpensiveIceCream)
+                    {
+                        totalCost -= iceCreamOrders[0].CalculatePrice();
+                    }
+                }
+
+                if (dequeuedCustomer.Rewards.Tier != "Ordinary")
+                {
+                    Console.WriteLine($"\nYou have {dequeuedCustomer.Rewards.Points} points. How many would you like to use?");
+                    int pointsUsed = integerValidator("number of points", dequeuedCustomer.Rewards.Points);
+                    double costOffset = pointsUsed * 0.02;
+                    totalCost -= costOffset;
+                }
+
+                Console.WriteLine($"Final Cost: ${totalCost.ToString("0.00")}");
+
+                Console.Write("Press any key to proceed");
+                Console.ReadLine();
+
+                dequeuedCustomer.Rewards.Punch();
+
+                // Need to do Math.Floor()
+                dequeuedCustomer.Rewards.AddPoints(Convert.ToInt32((int)Math.Ceiling(totalCost * 0.72)));
+
+                string format = "dd/MM/yyyy HH:mm";
+                string dateFulfilled = Convert.ToString(DateTime.Now);
+                dequeuedCustomer.CurrentOrder.TimeFulfilled = DateTime.Parse(dateFulfilled);
+
+                List<string> existingLines = contents.ToList();
+                existingLines.RemoveAt(index);
+                File.WriteAllLines("orders.csv", existingLines);
+
+                dequeuedCustomer.OrderHistory.Add(dequeuedCustomer.CurrentOrder);
+                dequeuedCustomer.CurrentOrder = null;
+            }
+            catch (Exception e)
             {
-                Console.WriteLine($"\nYou have {dequeuedCustomer.Rewards.Points} points. How many would you like to use?");
-                int pointsUsed = integerValidator("number of points", dequeuedCustomer.Rewards.Points);
-                double costOffset = pointsUsed * 0.02;
-                totalCost -= costOffset;
+                Console.WriteLine("Queue empty. no orders.");
             }
-
-            Console.WriteLine($"Final Cost: ${totalCost.ToString("0.00")}");
-
-            Console.Write("Press any key to proceed");
-            Console.ReadLine();
-
-            dequeuedCustomer.Rewards.Punch();
-
-            // Need to do Math.Floor()
-            dequeuedCustomer.Rewards.AddPoints(Convert.ToInt32((int)Math.Ceiling(totalCost * 0.72)));
-
-            string format = "dd/MM/yyyy HH:mm";
-            string dateFulfilled = Convert.ToString(DateTime.Now);
-            dequeuedCustomer.CurrentOrder.TimeFulfilled = DateTime.Parse(dateFulfilled);
-
-            List<string> existingLines = contents.ToList();
-            existingLines.RemoveAt(index);
-            File.WriteAllLines("orders.csv", existingLines);
-
-            dequeuedCustomer.OrderHistory.Add(dequeuedCustomer.CurrentOrder);
-            dequeuedCustomer.CurrentOrder = null;
         }
 
         // Incomplete
@@ -1308,7 +1327,7 @@ namespace Error404_PRG2_V2
             {
                 flavourString += ",";
             }
-            Console.WriteLine(flavourString);
+            //Console.WriteLine(flavourString);
 
             // Prepare topping string 
             counter = 1;
@@ -1321,7 +1340,7 @@ namespace Error404_PRG2_V2
             {
                 toppingString += ",";
             }
-            Console.WriteLine(toppingString);
+            //Console.WriteLine(toppingString);
             Console.WriteLine(selectedCustomer.CurrentOrder.TimeFulfilled);
 
             string finalAppendLine = "";
