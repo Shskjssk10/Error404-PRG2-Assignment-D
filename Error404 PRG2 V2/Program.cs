@@ -485,7 +485,7 @@ namespace Error404_PRG2_V2
             }
         }
         
-        // Option4 Logic completed. Need hendrik to test
+        // Option4 Logic completed. Need hendrik to test test this 
         static void Option4(Dictionary<int, Customer> customerDict)
         {
             Customer selectedCustomer = selectCustomer(customerDict);
