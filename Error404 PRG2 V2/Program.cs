@@ -22,7 +22,6 @@ namespace Error404_PRG2_V2
         // Main program
         static void Main(string[] args)
         {
-
             Dictionary<int, Customer> customerDict = InitData();
             // Loops until user exits
             while (true)
@@ -84,6 +83,10 @@ namespace Error404_PRG2_V2
                     Console.WriteLine("Thank you! Goodbye :D");
                     break;
                 }
+                else if (option == "caden")
+                {
+                    List<string> list = new List<string>() { "caden", "caden", "darius"};
+                }
                 else
                 {
                     Console.WriteLine("Please return a valid input. An integer between 0-6 inclusive!");
@@ -96,7 +99,7 @@ namespace Error404_PRG2_V2
         {
             Console.Write("================= MENU INTERFACE =================\n[1] List all customers\n[2] List all current orders\n[3] Register" +
                 " a new customer\n[4] Create a customer's order\n[5] Display order details of a customer\n[6] Modify order details\n[7] Process an Order and Checkout" +
-                "\n[8] Display Financial Details\n[0] Exit\n==================================================\nEnter option: ");
+                "\n[8] Display Financial Details\n[9] Recommendations\n[0] Exit\n==================================================\nEnter option: ");
         }
 
         // Method for initiating data
@@ -500,7 +503,7 @@ namespace Error404_PRG2_V2
                 string[] contents = File.ReadAllLines("orders.csv");
 
                 // Parse the formatted string back to DateTime
-                DateTime formattedDateAndTime = DateTime.ParseExact(DateTime.Today.ToString("dd/MM/yyyy HH:mm"),
+                DateTime formattedDateAndTime = DateTime.ParseExact(DateTime.Now.ToString("dd/MM/yyyy HH:mm"),
                     "dd/MM/yyyy HH:mm", null);
 
                 // Checks last orderID of orders.csv and gives new ID of +1
@@ -716,11 +719,11 @@ namespace Error404_PRG2_V2
                     if (counter > 1)
                     {
                         Console.WriteLine("\nWhich ice cream would you like to delete");
-                        index = integerValidator("option", counter) - 1;
-                        selectedCustomer.CurrentOrder.IceCreamList.RemoveAt(index);
+                        index = integerValidator("option", counter);
+                        selectedCustomer.CurrentOrder.IceCreamList.RemoveAt(index-1);
 
                         List<string> existingLines = contents.ToList();
-                        existingLines.RemoveAt(indexLine[index]);
+                        existingLines.RemoveAt(indexLine[index-1]);
 
                         // Updates orders.csv
                         File.WriteAllLines("orders.csv", existingLines);
@@ -903,7 +906,7 @@ namespace Error404_PRG2_V2
             foreach (string month in months)
             {
                 monthlyTotal = 0;
-                int monthlyIndex = months.IndexOf(month) + 1;
+                int monthlyIndex = months.IndexOf(month);
                 foreach (Customer customer in customerDict.Values)
                 {
                     foreach (Order order in customer.OrderHistory)
@@ -935,6 +938,32 @@ namespace Error404_PRG2_V2
             else
             {
                 Console.WriteLine($"\n There are no records for the year of {inputtedYear}.");
+            }
+        }
+
+        // Option 9 - Returns recommendations depending on customer
+        static void Option9(Dictionary<int, Customer> customerDict)
+        {
+            Customer selectedCustomer = selectCustomer(customerDict);
+
+            foreach (Customer customer in customerDict.Values)
+            {
+                if (customer.OrderHistory.Count != 0)
+                {
+                    foreach(Order order in customer.OrderHistory)
+                    {
+                        foreach (IceCream iceCream in order.IceCreamList)
+                        {
+
+                        }
+                    }
+                }
+            }
+
+            // Checks if customer has made orders before
+            if (selectedCustomer.OrderHistory.Count == 0 && selectedCustomer.CurrentOrder.IceCreamList.Count == 0)
+            {
+
             }
         }
         
