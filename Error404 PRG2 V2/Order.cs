@@ -41,7 +41,7 @@ namespace Error404_PRG2_V2
         public Order(int i, DateTime t)
         {
             Id = i;
-            TimeReceived = DateTime.Now;
+            TimeReceived = t;
 
         }
 

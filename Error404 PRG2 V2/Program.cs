@@ -85,16 +85,11 @@ namespace Error404_PRG2_V2
                 // Test case for Caden -- help delete if this is still here ================================================================
                 else if (option == "caden")
                 {
-                    List<Flavour> flavourList = new List<Flavour>();
-                    flavourList.Add(new Flavour("Strawberry", false, 2));
-                    flavourList.Add(new Flavour("Vanilla", false, 1));
-                    string flavour = "Vanilla";
-
-                    foreach (Flavour flavourInList in flavourList)
+                    foreach (Customer customer in customerDict.Values)
                     {
-                        if (flavourInList.Type == flavour)
+                        foreach (Order order in customer.OrderHistory)
                         {
-                            Console.WriteLine(true);
+                            Console.WriteLine(order.TimeReceived);
                         }
                     }
                 }
@@ -195,7 +190,6 @@ namespace Error404_PRG2_V2
                             order1.TimeFulfilled = null;
                         }
                         tempOrderList.Add(Convert.ToInt32(selectedLine[0]), order1);
-
                     }
                 }
             }
@@ -389,6 +383,7 @@ namespace Error404_PRG2_V2
             {
                 Console.Write("Enter customer name: ");
                 name = Console.ReadLine().Trim();
+                name = name.Substring(0, 1).ToUpper() + name.Substring(1);
                 bool isString = true;
                 foreach (char character in name)
                 {
@@ -450,7 +445,14 @@ namespace Error404_PRG2_V2
                 {
                     Console.Write("Enter customer DOB [DD/MM/YYYY]: ");
                     dob = DateTime.ParseExact(Console.ReadLine(), format, null);
-                    break;
+                    if (dob.Year > DateTime.Now.Year)
+                    {
+                        Console.WriteLine("Date cannot be in the future.");
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
                 catch (FormatException e)
                 {
@@ -852,7 +854,7 @@ namespace Error404_PRG2_V2
                 try
                 {
                     Console.Write("Enter the year: ");
-                    inputtedYear = Convert.ToInt32(Console.ReadLine());
+                    inputtedYear = Convert.ToInt32(Console.ReadLine().Trim());
                     if (inputtedYear.ToString().Length != 4) 
                     {
                         Console.WriteLine("Please enter a year that has 4 digits");
@@ -876,15 +878,17 @@ namespace Error404_PRG2_V2
             foreach (string month in months)
             {
                 monthlyTotal = 0;
-                int monthlyIndex = months.IndexOf(month);
+                int monthlyIndex = months.IndexOf(month) + 1;
                 foreach (Customer customer in customerDict.Values)
                 {
                     foreach (Order order in customer.OrderHistory)
                     {
                         if (order.TimeReceived.Month == monthlyIndex && order.TimeReceived.Year == inputtedYear)
-                        foreach(IceCream iceCream in order.IceCreamList)
                         {
-                            monthlyTotal += iceCream.CalculatePrice();
+                            foreach(IceCream iceCream in order.IceCreamList)
+                            {
+                                monthlyTotal += iceCream.CalculatePrice();
+                            }
                         }
                     }
                 }
@@ -933,7 +937,7 @@ namespace Error404_PRG2_V2
                 {
                     foreach (Customer customer in customerDict.Values)
                     {
-                        if (customer.Name == option.Substring(0, 1).ToUpper() + option.Substring(1))
+                        if (customer.Name.ToLower() == option)
                         {
                             selectedCustomer = customer;
                         }
