@@ -19,10 +19,12 @@ namespace Error404_PRG2_V2
 {
     internal class Program
     {
+        // Main program
         static void Main(string[] args)
         {
 
             Dictionary<int, Customer> customerDict = InitData();
+            // Loops until user exits
             while (true)
             {
                 //Menu interface containing options for user to enter
@@ -82,17 +84,6 @@ namespace Error404_PRG2_V2
                     Console.WriteLine("Thank you! Goodbye :D");
                     break;
                 }
-                // Test case for Caden -- help delete if this is still here ================================================================
-                else if (option == "caden")
-                {
-                    foreach (Customer customer in customerDict.Values)
-                    {
-                        foreach (Order order in customer.OrderHistory)
-                        {
-                            Console.WriteLine(order.TimeReceived);
-                        }
-                    }
-                }
                 else
                 {
                     Console.WriteLine("Please return a valid input. An integer between 0-6 inclusive!");
@@ -120,7 +111,7 @@ namespace Error404_PRG2_V2
             {
                 string header = sr.ReadLine();
                 string line;
-
+                // Repeats until no lines to read
                 while ((line = sr.ReadLine()) != null)
                 {
                     string[] contents = line.Split(',');
@@ -142,10 +133,10 @@ namespace Error404_PRG2_V2
             //Skips the header
             string[] orderContents = temp.Skip(1).ToArray();
 
-            string format = "dd/MM/yyyy HH:mm";
-
             // MemberID and OrderID respectively, used for referencing later.
             Dictionary<int, int> orderCustomerPairs = new Dictionary<int, int>();
+
+            // Adding MemberID and orderID keys 
             foreach(string line in orderContents)
             {
                 var selectedLine = line.Split(',');
@@ -154,7 +145,7 @@ namespace Error404_PRG2_V2
                     orderCustomerPairs.Add(Convert.ToInt32(selectedLine[0]), Convert.ToInt32(selectedLine[1]));
                 }
                 catch (Exception ex) 
-                { 
+                {
                 }
             }
 
@@ -194,22 +185,26 @@ namespace Error404_PRG2_V2
                 }
             }
 
-            // foreach loop to append respective data to each order object
+            // Loop to append respective data to each ordr object
             foreach (var order in tempOrderList)
             {
-                foreach(string line in orderContents)
+                foreach (string line in orderContents)
                 {
                     List<Flavour> flavourList = new List<Flavour>();
                     List<Topping> toppingList = new List<Topping>();
 
                     string[] selectedLine = line.Split(',');
+
+                    // Matches order object with line in orders.csv. selectedLine[0] is order ID
                     if (Convert.ToInt32(selectedLine[0]) == order.Key)
                     {
                         int scoops = Convert.ToInt32(selectedLine[5]);
 
+                        // Clears lists to append new data.
                         flavourList.Clear();
                         toppingList.Clear();
 
+                        // Loop repeats for as many scoops there are
                         for (int i = 8; i < 8 + scoops; i++)
                         {
                             // Check if the flavour is not empty
@@ -235,15 +230,14 @@ namespace Error404_PRG2_V2
                         // Prepare toppings list
                         for (int i = 11; i < 15; i++)
                         {
-                            // Check 
+                            // Check if string is empty
                             if (!string.IsNullOrEmpty(selectedLine[i]))
                             {
                                 toppingList.Add(new Topping(selectedLine[i]));
                             }
                         }
 
-                        // Checks if Icecream is cup, cone or waffle 
-                        // Adds to order as well 
+                        // Adds IceCream to order. Checks if its cup, cone or waffle.
                         if (selectedLine[4] == "Cup")
                         {
                             order.Value.AddIceCream(new Cup(selectedLine[4], scoops, flavourList, toppingList));
@@ -294,11 +288,10 @@ namespace Error404_PRG2_V2
                     }
                 }
             }
-
             return customerDict;
         }
 
-        // Completed 
+        // Option 1 - Lists all customers
         static void Option1(Dictionary<int, Customer> customerDict)
         {
             // Display the information of all customers 
@@ -309,7 +302,7 @@ namespace Error404_PRG2_V2
             }
         }
 
-        // Option2 Logic is complete, requires option 4 to be complete.
+        // Option2 - List all current orders in respectives queues
         static void Option2(Dictionary<int, Customer> customerDict)
         {
             // Display information of all CURRENT orders in both gold and regular queues
@@ -327,6 +320,7 @@ namespace Error404_PRG2_V2
                 }
             }
 
+            // Filters orders by tiers 
             foreach (Customer customer in filteredCustomerList)
             {
                 if (customer.Rewards.Tier == "Gold" && customer.CurrentOrder != null)
@@ -340,6 +334,7 @@ namespace Error404_PRG2_V2
                 }
             }
 
+            // Prints gold queue
             Console.WriteLine("================= GOLD QUEUE =================\n");
             if (goldQueue.Count == 0)
             {
@@ -357,6 +352,7 @@ namespace Error404_PRG2_V2
                 }
             }
 
+            // Prints regular queue
             Console.WriteLine("=============== REGULAR QUEUE ===============\n");
             if (regularQueue.Count == 0)
             {
@@ -375,10 +371,11 @@ namespace Error404_PRG2_V2
             }
         }
 
-        // Option3 Customer is not appended to customer.csv 
+        // Option3 - Register a new customer 
         static void Option3(Dictionary<int, Customer> customerDict)
         {
             var name = "";
+            // Name data validation. Checks if name only contains alphabets 
             while (true)
             {
                 Console.Write("Enter customer name: ");
@@ -435,10 +432,11 @@ namespace Error404_PRG2_V2
                 }
             }
 
-            // DOB data validation. Checks that it is entered in the correct format.
+            // Initialises dob variable
             DateTime dob = DateTime.Today;
             string format = "dd/MM/yyyy";
 
+            // DOB data validation. Checks that it is entered in the correct format.
             while (true)
             {
                 try
@@ -467,10 +465,13 @@ namespace Error404_PRG2_V2
 
             }
 
+            // Creates customer object 
             Customer customer = new Customer(name, id, dob);
             customerDict.Add(id, customer);
 
             string customerFilePath = "customers.csv";
+
+            // Apends customer object into customers.csv
             try
             {
                 using (StreamWriter sw = new StreamWriter(customerFilePath, true))
@@ -487,16 +488,18 @@ namespace Error404_PRG2_V2
             }
         }
         
-        // Option4 Logic completed. Need hendrik to test test this 
+        // Option4 - Create customer order 
         static void Option4(Dictionary<int, Customer> customerDict)
         {
+            // Select wanted customer
             Customer selectedCustomer = selectCustomer(customerDict);
 
+            // Check is selectedCustomer has current orders
             if (selectedCustomer.CurrentOrder == null)
             {
                 string[] contents = File.ReadAllLines("orders.csv");
 
-                // Parse the formatted string back to DateTimee
+                // Parse the formatted string back to DateTime
                 DateTime formattedDateAndTime = DateTime.ParseExact(DateTime.Today.ToString("dd/MM/yyyy HH:mm"),
                     "dd/MM/yyyy HH:mm", null);
 
@@ -504,10 +507,12 @@ namespace Error404_PRG2_V2
                 selectedCustomer.CurrentOrder = new Order(Convert.ToInt16(contents.Last().Split(',').First()) + 1,
                     formattedDateAndTime);
 
+                // Creating and adds IceCream 
                 IceCream iceCream = makeIceCream();
                 selectedCustomer.CurrentOrder.AddIceCream(iceCream);
                 Console.WriteLine($"Ice Cream has been succesfully added to {selectedCustomer.Name} current order!");
 
+                // Checks if customer wants to create another customer
                 string option;
                 while (true)
                 {
@@ -522,12 +527,10 @@ namespace Error404_PRG2_V2
                     }
                     else if (option == "n")
                     {
-                        Console.WriteLine("Order has been succesfully created!");
-
                         // Preparing data to append to orders.csv
-
                         foreach (IceCream item in selectedCustomer.CurrentOrder.IceCreamList)
                         {
+                            // Prepares line that is to be appended into orders.csv
                             string finalAppendLine = csvLineFormatter(item, selectedCustomer);
 
                             using (StreamWriter sw = new StreamWriter("orders.csv", true))
@@ -535,7 +538,7 @@ namespace Error404_PRG2_V2
                                 sw.WriteLine(finalAppendLine);
                             }
                         }
-
+                        Console.WriteLine("Order has been succesfully created!");
                         break;
                     }
                     else
@@ -550,28 +553,36 @@ namespace Error404_PRG2_V2
             }
         }
 
-        // Completed 
+        // Option5 - Display orders details of a customer 
         static void Option5(Dictionary<int, Customer> customerDict)
         {
             int counter = 0;
+
+            // Select wanted customer
             Customer selectedCustomer = selectCustomer(customerDict);
 
-            // Returns current order
+            // Returns if there is current order
             Console.WriteLine("\nCurrent order\n===================================");
             if (selectedCustomer.CurrentOrder == null)
             {
-                Console.WriteLine($"({selectedCustomer.Name}) has no orders at the moment.\n");
+                Console.WriteLine($"({selectedCustomer.Name}) has no current orders.\n");
             }
             else
             {
                 Console.WriteLine(selectedCustomer.CurrentOrder);
+                Console.WriteLine();
+                foreach (var order in selectedCustomer.CurrentOrder.IceCreamList)
+                {
+                    Console.WriteLine(order.ToString());
+                }
             }
 
+            // Returns if there are past orders
             Console.WriteLine("\nPast orders\n===================================\n");
             counter = 1;
             if (selectedCustomer.OrderHistory.Count == 0)
             {
-                Console.WriteLine($"({selectedCustomer.Name}) has no orders in history.\n");
+                Console.WriteLine($"({selectedCustomer.Name}) has no orders in records.\n");
             }
             else
             {
@@ -589,21 +600,24 @@ namespace Error404_PRG2_V2
             }
         }
 
-        // Logic completed. Requires testing with option4 
+        // Option6 - Modify order details
         static void Option6(Dictionary<int, Customer> customerDict)
         {
-            // Method that returns valid customer
+            // Returns selectedCustomer
             Customer selectedCustomer = selectCustomer(customerDict);
 
+            // Skips header
             string[] contents = File.ReadAllLines("orders.csv").Skip(1).ToArray();
 
-            // index is which line of csv.
+            // indexLine contains indexes of lines that are to be modified. Used for later reference when needed to 
+            // modify line
             List<int> indexLine = new List<int>();
+
+            // Gets index and stores in indexLine
             int indexx = 0;
             foreach (string line in contents)
             {
                 string[] parsedLine = line.Split(',');
-                //Console.WriteLine(parsedLine[0]);
                 if (parsedLine[3] == "" && Convert.ToInt16(parsedLine[0]) == selectedCustomer.CurrentOrder.Id)
                 {
                     indexLine.Add(indexx);
@@ -612,6 +626,10 @@ namespace Error404_PRG2_V2
             }
 
             Console.WriteLine($"{selectedCustomer.Name}'s orders:\n==================================================\n");
+
+            // Checks if selectedCustomer has current orders, returns to main program if false
+
+            // counter returns number of IceCream objects in order
             int counter = 0;
             if (selectedCustomer.CurrentOrder == null)
             {
@@ -643,6 +661,8 @@ namespace Error404_PRG2_V2
                         index = 0;
                     }
                     selectedIceCream = selectedCustomer.CurrentOrder.IceCreamList[index];
+
+                    // Calls method to modify IceCream 
                     IceCream modifiedIceCream = modifyIceCream(selectedIceCream);
                     selectedCustomer.CurrentOrder.IceCreamList[index] = modifiedIceCream;
 
@@ -662,12 +682,8 @@ namespace Error404_PRG2_V2
                             }
                         }
                     }
-
-                    //foreach (var updatedContent in updatedContents)
-                    //{
-                    //    Console.WriteLine(updatedContent);
-                    //}
                 }
+                // Option for creating new IceCream objects 
                 else if (option == 2)
                 {
                     IceCream iceCream = makeIceCream();
@@ -690,10 +706,13 @@ namespace Error404_PRG2_V2
 
                     Console.WriteLine("Ice Cream has been successfully added!");
                 }
+                // Option for deleting IceCream objects in existing orders 
                 else
                 {
                     IceCream selectedIceCream;
                     int index = 0;
+
+                    // Checks if currentOrder has more than one IceCream object
                     if (counter > 1)
                     {
                         Console.WriteLine("\nWhich ice cream would you like to delete");
@@ -703,12 +722,7 @@ namespace Error404_PRG2_V2
                         List<string> existingLines = contents.ToList();
                         existingLines.RemoveAt(indexLine[index]);
 
-                        // To delete
-                        foreach (var line in existingLines)
-                        {
-                            Console.WriteLine(line);
-                        }
-
+                        // Updates orders.csv
                         File.WriteAllLines("orders.csv", existingLines);
                         Console.WriteLine("Ice Cream has been successfully deleted!");
                     }
@@ -718,13 +732,12 @@ namespace Error404_PRG2_V2
                     }
                 }
             }
-
-            
         }
 
-        //Incomplete
+        // Option7 - Process an order and checkout 
         static void Option7(Dictionary<int, Customer> customerDict)
         {
+            // Checks if there are orders in both queues. Else returns that there are no orders
             try
             {
                 Queue<Customer> goldQueue = new Queue<Customer>();
@@ -743,6 +756,7 @@ namespace Error404_PRG2_V2
                     }
                 }
 
+                // Updates both regular and gold queue 
                 foreach (Customer customer in filteredCustomerList)
                 {
                     if (customer.Rewards.Tier == "Gold")
@@ -755,6 +769,7 @@ namespace Error404_PRG2_V2
                     }
                 }
 
+                // Dequeues from gold if possible, else regular
                 Customer dequeuedCustomer = null;
                 if (goldQueue.Count > 0)
                 {
@@ -765,6 +780,7 @@ namespace Error404_PRG2_V2
                     dequeuedCustomer = regularQueue.Dequeue();
                 }
 
+                // Finds which line in the csv is the IceCream objects are in the order
                 int index = 0;
                 foreach (string line in contents)
                 {
@@ -776,6 +792,7 @@ namespace Error404_PRG2_V2
                     index++;
                 }
 
+                // Returns dequeued order
                 Console.WriteLine("============= DEQUEUED ORDER =============");
                 IceCream mostExpensiveIceCream = null;
                 double mostCost = 0;
@@ -783,6 +800,7 @@ namespace Error404_PRG2_V2
 
                 List<IceCream> iceCreamOrders = dequeuedCustomer.CurrentOrder.IceCreamList;
 
+                // Returns IceCream objects details from dequeued Customer
                 foreach (IceCream iceCream in iceCreamOrders)
                 {
                     Console.WriteLine(iceCream.ToString() + $"\n\nCost: ${iceCream.CalculatePrice().ToString("0.00")}");
@@ -794,12 +812,14 @@ namespace Error404_PRG2_V2
                     totalCost += iceCream.CalculatePrice();
                 }
 
+                // Checks if customer DOB is today. If true, makes first IceCream of list free
                 Console.WriteLine(dequeuedCustomer.Rewards.ToString());
                 if (dequeuedCustomer.Dob == DateTime.Today)
                 {
                     totalCost -= mostExpensiveIceCream.CalculatePrice();
                 }
 
+                // Check if Punchcard = 10. If true, makes most expensive IceCream free 
                 if (dequeuedCustomer.Rewards.PunchCard == 10)
                 {
                     if (iceCreamOrders[0] != mostExpensiveIceCream)
@@ -808,6 +828,7 @@ namespace Error404_PRG2_V2
                     }
                 }
 
+                // Check customer status to see if points can be used
                 if (dequeuedCustomer.Rewards.Tier != "Ordinary")
                 {
                     Console.WriteLine($"\nYou have {dequeuedCustomer.Rewards.Points} points. How many would you like to use?");
@@ -826,12 +847,11 @@ namespace Error404_PRG2_V2
                 // Need to do Math.Floor()
                 dequeuedCustomer.Rewards.AddPoints(Convert.ToInt32((int)Math.Ceiling(totalCost * 0.72)));
 
-                string format = "dd/MM/yyyy HH:mm";
                 string dateFulfilled = Convert.ToString(DateTime.Now);
                 dequeuedCustomer.CurrentOrder.TimeFulfilled = DateTime.Parse(dateFulfilled);
 
                 List<string> existingLines = contents.ToList();
-                existingLines.RemoveAt(index);
+                existingLines[index].Split(',')[4] = DateTime.Parse(dateFulfilled).ToString();
                 File.WriteAllLines("orders.csv", existingLines);
 
                 dequeuedCustomer.OrderHistory.Add(dequeuedCustomer.CurrentOrder);
@@ -843,12 +863,12 @@ namespace Error404_PRG2_V2
             }
         }
 
-        // Incomplete
+        // Option8 - Display financial details
         static void Option8(Dictionary<int, Customer> customerDict)
         {
             int inputtedYear = 0;
             List<String> months = new List<String>() { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Oct", "Nov", "Dec" };
-            // Validate year
+            // Data validation for year
             while (true)
             {
                 try
@@ -858,6 +878,10 @@ namespace Error404_PRG2_V2
                     if (inputtedYear.ToString().Length != 4) 
                     {
                         Console.WriteLine("Please enter a year that has 4 digits");
+                    }
+                    else if (inputtedYear > DateTime.Now.Year)
+                    {
+                        Console.WriteLine("No records for year inputted");
                     }
                     else
                     {
@@ -875,6 +899,7 @@ namespace Error404_PRG2_V2
 
             List<double> monthlyTotalList = new List<double>();
 
+            // Calculates profit for each month and for the year
             foreach (string month in months)
             {
                 monthlyTotal = 0;
@@ -896,13 +921,21 @@ namespace Error404_PRG2_V2
                 grandTotal += monthlyTotal;
             }
 
-            int counter = 0;
-            foreach (double total in monthlyTotalList)
+            // Checks if grand total is 0. If true, return that there are no records available
+            if (grandTotal != 0)
             {
-                Console.WriteLine($"{months[counter]} {inputtedYear}:  ${total.ToString("0.00")}");
-                counter++;
+                int counter = 0;
+                foreach (double total in monthlyTotalList)
+                {
+                    Console.WriteLine($"{months[counter]} {inputtedYear}:  ${total.ToString("0.00")}");
+                    counter++;
+                }
+                Console.WriteLine($"\nTotal:     ${grandTotal.ToString("0.00")}");
             }
-            Console.WriteLine($"\nTotal:     ${grandTotal.ToString("0.00")}");
+            else
+            {
+                Console.WriteLine($"\n There are no records for the year of {inputtedYear}.");
+            }
         }
         
         // Method that validates and returns customer
@@ -953,10 +986,12 @@ namespace Error404_PRG2_V2
         static int integerValidator(string prompt, int limit)
         {
             int option = 0;
+            // Data validation for integer
             while (true)
             {
                 try
                 {
+                    // Return specialised prompt
                     Console.Write($"Enter {prompt}: ");
                     option = Convert.ToInt32(Console.ReadLine());
                     if (option < 1 || option > limit)
@@ -982,12 +1017,15 @@ namespace Error404_PRG2_V2
             return option;
         }
 
+        // Method that returns flavours. scoops represent number of flavours user can choose
         static List<Flavour> choosingFlavours(int scoops)
         {
             List<string> flavours = new List<string>() { "Vanilla", "Chocolate", "Strawberry", "Durian", "Ube", "Sea salt" };
             List<Flavour> userFlavourList = new List<Flavour>();
             int counter;
             int inputtedFlavours = 0;
+
+            // Repeats until number of flavours inputted match number of scoops
             while (inputtedFlavours != scoops)
             {
                 counter = 1;
@@ -1021,6 +1059,7 @@ namespace Error404_PRG2_V2
                     else
                     {
                         inputtedFlavours += userFlavourNo;
+
                         //Apending flavour to flavourList 
                         bool isPremium = userFlavour > 3;
                         userFlavourList.Add(new Flavour(flavours[userFlavour - 1], isPremium, userFlavourNo));
@@ -1031,6 +1070,7 @@ namespace Error404_PRG2_V2
             return userFlavourList;
         }
 
+        // Method that returns flavours
         static List<Topping> choosingToppings()
         {
             List<string> toppings = new List<string>() { "Sprinkles", "Mochi", "Sago", "Oreos" };
@@ -1041,10 +1081,7 @@ namespace Error404_PRG2_V2
                 //Display topping options 
                 Console.WriteLine();
                 Console.WriteLine("Choose Topping");
-                Console.WriteLine($"[1] {toppings[0]}");
-                Console.WriteLine($"[2] {toppings[1]}");
-                Console.WriteLine($"[3] {toppings[2]}");
-                Console.WriteLine($"[4] {toppings[3]}");
+                Console.WriteLine($"[1] {toppings[0]}\n + \n[2] {toppings[1]} + \n[3] {toppings[2]} + \n[4] {toppings[3]}");
 
                 //Validation for choosing of topping
                 while (true)
@@ -1079,6 +1116,7 @@ namespace Error404_PRG2_V2
             return userToppingList;
         }
 
+        // Method for moifying IceCream object. Has 5 choices
         static IceCream modifyIceCream(IceCream modifyIceCream)
         {
             string optionsFormat = "\nWhat would you like to modify?\n[1] Option\n[2] No. of scoops\n[3] Flavour\n[4] Topping";
@@ -1099,7 +1137,7 @@ namespace Error404_PRG2_V2
                 selectedOption = integerValidator("option", 5);
             }
 
-            // Modifying No. of scoops
+            // Modifying option 
             if (selectedOption == 1)
             {
                 List<string> options = new List<string>() { "Cup", "Cone", "Waffle", "Exit"};
@@ -1145,40 +1183,47 @@ namespace Error404_PRG2_V2
 
 
             }
+            // Modify number of scoops 
             else if (selectedOption == 2)
             {
                 modifyIceCream.Scoops = integerValidator("no. of scoops (1-3)", 3);
                 modifyIceCream.Flavours = choosingFlavours(modifyIceCream.Scoops);
                 Console.WriteLine($"\n{modifyIceCream.Option} has been successfully modified!\n{modifyIceCream.ToString()}");
             }
+            // Modify flavours 
             else if (selectedOption == 3)
             {
                 modifyIceCream.Flavours = choosingFlavours(modifyIceCream.Scoops);
                 Console.WriteLine($"\n{modifyIceCream.Option} has been successfully modified!\n{modifyIceCream.ToString()}");
             }
+            // Modify toppings 
             else if (selectedOption == 4)
             {
                 modifyIceCream.Toppings = choosingToppings();
                 Console.WriteLine($"\n{modifyIceCream.Option} has been successfully modified!\n{modifyIceCream.ToString()}");
             }
+            // Modify whether cone wants to be dipped in choc
             else if (selectedOption == 5 && modifyIceCream.Option == "Cone")
             {
                 modifyIceCream = makeCone(modifyIceCream.Scoops, modifyIceCream.Flavours, modifyIceCream.Toppings);
                 Console.WriteLine($"\n{modifyIceCream.Option} has been successfully modified!\n{modifyIceCream.ToString()}");
             }
+            // Check if user want a special flavour for waffle
             else if (selectedOption == 5 && modifyIceCream.Option == "Waffle")
             {
                 modifyIceCream = makeWaffle(modifyIceCream.Scoops, modifyIceCream.Flavours, modifyIceCream.Toppings);
                 Console.WriteLine($"\n{modifyIceCream.Option} has been successfully modified!\n{modifyIceCream.ToString()}");
             }
-
             return modifyIceCream;
         }
 
+        // Method for creating Cone objects 
         static Cone makeCone(int scoops, List<Flavour> userFlavourList, List<Topping> userToppingList)
         {
             string option;
             Cone cone = null;
+
+            // Validates whether user wants cone to be dipped in chocolate
             while (true)
             {
                 Console.Write("Would you like your cone to be dipped in chocolate [y/n]: ");
@@ -1203,6 +1248,7 @@ namespace Error404_PRG2_V2
             return cone;
         }
 
+        // Method for creating Waffle objects
         static Waffle makeWaffle(int scoops, List<Flavour> userFlavourList, List<Topping> userToppingList)
         {
             List<string> specialFlavour = new List<string>() { "Red velvet", "Charcoal", "Pandan Waffle" };
@@ -1210,6 +1256,8 @@ namespace Error404_PRG2_V2
 
             string option;
             int counter = 1;
+
+            // Validates whether user wants waffle to have a special flavour
             while (true)
             {
                 Console.Write("Would you like your waffle to be a special flavour [y/n]: ");
@@ -1243,6 +1291,7 @@ namespace Error404_PRG2_V2
             return waffle;
         }
 
+        // Method for creating IceCream objects
         static IceCream makeIceCream()
         {
             List<string> options = new List<string>() { "Cup", "Cone", "Waffle" };
@@ -1312,6 +1361,7 @@ namespace Error404_PRG2_V2
             }
         }
 
+        // Method for creating csv line to be appeded
         static string csvLineFormatter(IceCream item, Customer selectedCustomer)
         {
             string flavourString = "";
